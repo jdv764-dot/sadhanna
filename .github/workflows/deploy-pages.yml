@@ -1,12 +1,14 @@
-name: Deploy app to GitHub Pages
+name: Deploy apps to GitHub Pages
 
 on:
   push:
     branches:
       - main
       - claude/she-comes-first-app-q3o95v
+      - claude/iphone-christianity-app-54ri1n
     paths:
       - "she-comes-first/**"
+      - "foundations/**"
       - ".github/workflows/deploy-pages.yml"
   workflow_dispatch:
 
@@ -34,10 +36,16 @@ jobs:
         with:
           enablement: true
 
+      - name: Assemble site
+        run: |
+          mkdir -p dist
+          cp -r she-comes-first/. dist/
+          cp -r foundations dist/foundations
+
       - name: Upload site
         uses: actions/upload-pages-artifact@v3
         with:
-          path: she-comes-first
+          path: dist
 
       - name: Deploy
         id: deployment

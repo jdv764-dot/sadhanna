@@ -1,0 +1,1011 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no" />
+<title>Foundations</title>
+<meta name="description" content="Learn the main teachings of Christianity — lessons, quizzes, and the great texts of the faith." />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="default" />
+<meta name="apple-mobile-web-app-title" content="Foundations" />
+<meta name="theme-color" content="#f7f2e8" />
+<link rel="manifest" href="manifest.webmanifest" />
+<link rel="apple-touch-icon" href="icon-180.png" />
+<link rel="icon" type="image/png" href="icon-180.png" />
+<style>
+  :root {
+    --bg: #f7f2e8;
+    --surface: #fffdf8;
+    --surface-2: #f1e9d8;
+    --line: #e3d9c2;
+    --ink: #2b2417;
+    --muted: #8a7d63;
+    --indigo: #253258;
+    --indigo-soft: #3c4a77;
+    --gold: #b8862e;
+    --gold-soft: #d9aa4f;
+    --garnet: #8a3232;
+    --good: #4a7d55;
+    --serif: ui-serif, "New York", Georgia, "Times New Roman", serif;
+    --sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--sans);
+    line-height: 1.6;
+    overscroll-behavior-y: none;
+    -webkit-font-smoothing: antialiased;
+  }
+  #app {
+    max-width: 640px;
+    margin: 0 auto;
+    padding: calc(env(safe-area-inset-top) + 18px) 20px calc(env(safe-area-inset-bottom) + 92px);
+    min-height: 100%;
+  }
+  header.appbar { margin-bottom: 18px; }
+  .appbar h1 {
+    font-family: var(--serif);
+    font-size: 28px;
+    color: var(--indigo);
+    letter-spacing: 0.2px;
+  }
+  .appbar p { color: var(--muted); font-size: 14px; margin-top: 2px; }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 16px 18px;
+    margin-bottom: 12px;
+    box-shadow: 0 1px 2px rgba(43, 36, 23, 0.05);
+  }
+  .card.tappable { cursor: pointer; }
+  .card.tappable:active { background: var(--surface-2); }
+
+  .module-tag {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 4px;
+  }
+  .module-head h2 { font-family: var(--serif); font-size: 21px; color: var(--indigo); line-height: 1.3; }
+  .module-head p { color: var(--muted); font-size: 14px; margin-top: 4px; }
+
+  .lesson-row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 2px;
+    border-top: 1px solid var(--line);
+    cursor: pointer;
+  }
+  .lesson-row:active { opacity: 0.7; }
+  .lesson-row .dot {
+    width: 26px; height: 26px; border-radius: 50%;
+    border: 2px solid var(--line);
+    flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; color: #fff;
+  }
+  .lesson-row.done .dot { background: var(--good); border-color: var(--good); }
+  .lesson-row .t { font-size: 15.5px; font-weight: 500; }
+  .lesson-row .chev { margin-left: auto; color: var(--muted); font-size: 18px; }
+
+  /* Lesson view */
+  .backlink {
+    display: inline-flex; align-items: center; gap: 6px;
+    color: var(--indigo-soft); font-weight: 600; font-size: 15px;
+    background: none; border: none; font-family: var(--sans);
+    cursor: pointer; margin-bottom: 14px; padding: 4px 0;
+  }
+  .lesson-view h2 { font-family: var(--serif); font-size: 26px; color: var(--indigo); line-height: 1.25; margin-bottom: 4px; }
+  .lesson-view .kicker { color: var(--gold); font-size: 12px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; }
+  .keyidea {
+    background: var(--surface-2);
+    border-left: 4px solid var(--gold-soft);
+    border-radius: 0 12px 12px 0;
+    padding: 12px 16px;
+    margin: 16px 0;
+    font-size: 15.5px;
+    font-weight: 500;
+  }
+  .lesson-view .body p { margin-bottom: 14px; font-size: 16px; }
+  .verse {
+    background: var(--indigo);
+    color: #f3ecdd;
+    border-radius: 14px;
+    padding: 18px 20px;
+    margin: 18px 0;
+  }
+  .verse .vtext { font-family: var(--serif); font-size: 17px; line-height: 1.55; font-style: italic; }
+  .verse .vref { margin-top: 10px; font-size: 13px; color: var(--gold-soft); font-weight: 600; letter-spacing: 0.5px; }
+  .terms { margin: 18px 0; }
+  .terms h3, .body h3 { font-size: 13px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+  .terms dl div { padding: 10px 0; border-top: 1px solid var(--line); }
+  .terms dt { font-weight: 700; font-size: 15px; color: var(--indigo); }
+  .terms dd { font-size: 14.5px; color: var(--ink); margin-top: 2px; }
+
+  .btn {
+    display: block; width: 100%;
+    border: none; border-radius: 14px;
+    padding: 15px;
+    font-size: 16px; font-weight: 700;
+    font-family: var(--sans);
+    cursor: pointer;
+    margin-top: 8px;
+  }
+  .btn.primary { background: var(--indigo); color: #fff; }
+  .btn.primary:active { background: var(--indigo-soft); }
+  .btn.done { background: var(--good); color: #fff; }
+  .btn.ghost { background: var(--surface-2); color: var(--indigo); border: 1px solid var(--line); }
+
+  /* Quiz */
+  .quiz-q { font-family: var(--serif); font-size: 20px; color: var(--indigo); line-height: 1.4; margin: 10px 0 16px; }
+  .opt {
+    display: block; width: 100%; text-align: left;
+    background: var(--surface); border: 1.5px solid var(--line);
+    border-radius: 13px; padding: 13px 15px;
+    font-size: 15.5px; font-family: var(--sans); color: var(--ink);
+    margin-bottom: 10px; cursor: pointer; line-height: 1.45;
+  }
+  .opt:active { background: var(--surface-2); }
+  .opt.correct { border-color: var(--good); background: #edf4ee; font-weight: 600; }
+  .opt.wrong { border-color: var(--garnet); background: #f7ecec; }
+  .why {
+    background: var(--surface-2); border-radius: 12px;
+    padding: 12px 15px; font-size: 14.5px; margin: 4px 0 12px;
+    color: var(--ink);
+  }
+  .quiz-meta { color: var(--muted); font-size: 13.5px; font-weight: 600; letter-spacing: 0.4px; }
+  .score-big { font-family: var(--serif); font-size: 44px; color: var(--indigo); text-align: center; margin: 10px 0 2px; }
+  .score-sub { text-align: center; color: var(--muted); margin-bottom: 16px; }
+
+  /* Texts */
+  .text-card h3 { font-family: var(--serif); font-size: 19px; color: var(--indigo); }
+  .text-card .sub { color: var(--muted); font-size: 13.5px; margin-top: 2px; }
+  .text-body { display: none; margin-top: 12px; border-top: 1px solid var(--line); padding-top: 12px; }
+  .text-card.open .text-body { display: block; }
+  .text-body p { font-family: var(--serif); font-size: 16px; margin-bottom: 10px; white-space: pre-line; }
+  .text-body .note { font-family: var(--sans); font-size: 13.5px; color: var(--muted); font-style: normal; }
+  .text-body ol { padding-left: 22px; font-family: var(--serif); font-size: 16px; }
+  .text-body ol li { margin-bottom: 6px; }
+
+  /* Progress */
+  .bar { height: 10px; background: var(--surface-2); border-radius: 6px; overflow: hidden; margin-top: 8px; }
+  .bar i { display: block; height: 100%; background: linear-gradient(90deg, var(--gold-soft), var(--gold)); border-radius: 6px; }
+  .prog-row { margin-bottom: 4px; }
+  .prog-row .lbl { display: flex; justify-content: space-between; font-size: 14.5px; font-weight: 600; }
+  .prog-row .lbl span:last-child { color: var(--muted); font-weight: 500; }
+
+  /* Tab bar */
+  nav.tabs {
+    position: fixed; left: 0; right: 0; bottom: 0;
+    background: rgba(255, 253, 248, 0.94);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-top: 1px solid var(--line);
+    display: flex;
+    padding: 8px 8px calc(env(safe-area-inset-bottom) + 8px);
+    z-index: 10;
+  }
+  nav.tabs button {
+    flex: 1; background: none; border: none;
+    font-family: var(--sans); font-size: 11px; font-weight: 600;
+    color: var(--muted); cursor: pointer;
+    display: flex; flex-direction: column; align-items: center; gap: 3px;
+    padding: 4px 0;
+  }
+  nav.tabs button .ic { font-size: 21px; line-height: 1; }
+  nav.tabs button.active { color: var(--indigo); }
+
+  .empty { text-align: center; color: var(--muted); padding: 30px 10px; font-size: 15px; }
+  .footnote { color: var(--muted); font-size: 12.5px; text-align: center; margin-top: 18px; padding: 0 10px; }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<nav class="tabs" id="tabs"></nav>
+
+<script>
+"use strict";
+
+/* ============================== CONTENT ============================== */
+
+const MODULES = [
+  {
+    tag: "Module 1",
+    title: "God and the Story of the World",
+    tagline: "Who God is, and how the Bible's story begins.",
+    lessons: [
+      {
+        t: "Who Is God?",
+        key: "Christianity teaches that there is one God — the eternal Creator of everything — who is personal, holy, loving, and just.",
+        body: [
+          "At the heart of Christianity is not first a set of rules but a person: God. Christians believe in one God (this is called monotheism), who did not begin and will not end, who made everything that exists, and who keeps it all in being moment by moment.",
+          "The Bible describes God's character with a handful of great words. He is holy — utterly pure and set apart from all evil. He is love — not merely loving, but love itself (1 John 4:8). He is just — he cares about right and wrong and will set all things right. And he is faithful — he keeps his promises across centuries.",
+          "Crucially, God is personal. He speaks, hears, and desires a relationship with human beings. Christianity is, from first to last, the story of God seeking people."
+        ],
+        verse: { text: "Hear, O Israel: the Lord our God, the Lord is one. You shall love the Lord your God with all your heart, with all your soul, and with all your might.", ref: "Deuteronomy 6:4–5" },
+        terms: [
+          ["Monotheism", "Belief in one God, in contrast to many gods (polytheism)."],
+          ["Holy", "Set apart, morally perfect; the word the Bible uses most insistently about God."],
+          ["Providence", "God's ongoing care for and governance of everything he has made."]
+        ]
+      },
+      {
+        t: "The Trinity",
+        key: "The one God exists eternally as three persons — Father, Son, and Holy Spirit — one in being, distinct in person.",
+        body: [
+          "The Trinity is Christianity's most distinctive teaching about God. Christians do not believe in three gods, and they do not believe God merely wears three masks. They believe the one God has always existed as three persons — the Father, the Son (Jesus Christ), and the Holy Spirit — fully equal, fully God, in perfect eternal relationship.",
+          "This is why Christians can say \"God is love\" of eternity itself: before anything was created, the Father, Son, and Spirit loved one another. Love is not something God started doing; it is who God is.",
+          "The word \"Trinity\" is not in the Bible, but the pattern is everywhere: Jesus is baptized while the Father speaks and the Spirit descends (Matthew 3), and his followers are sent to baptize \"in the name of the Father and of the Son and of the Holy Spirit\" (Matthew 28:19). The teaching was carefully defined in the early church creeds. It remains a mystery — not a puzzle to solve, but a reality bigger than our categories."
+        ],
+        verse: { text: "Go therefore and make disciples of all nations, baptizing them in the name of the Father and of the Son and of the Holy Spirit.", ref: "Matthew 28:19" },
+        terms: [
+          ["Trinity", "One God in three persons: Father, Son, and Holy Spirit."],
+          ["Person (in the Trinity)", "A distinct \"who\" within the one divine \"what\" — the Father is not the Son, yet each is fully God."],
+          ["Creed", "A short, authoritative summary of Christian belief, e.g. the Apostles' Creed or Nicene Creed."]
+        ]
+      },
+      {
+        t: "Creation and the Image of God",
+        key: "God made the world good, and made every human being in his own image — giving each person immeasurable dignity.",
+        body: [
+          "The Bible opens with God creating the heavens and the earth and repeatedly calling what he made \"good.\" Creation is not an accident or an illusion; it is a gift. Matter, bodies, work, food, rest, and beauty all matter to God.",
+          "The climax of the creation account is humanity: \"God created man in his own image... male and female he created them\" (Genesis 1:27). To be made in God's image means humans are like God in ways nothing else in creation is — able to love, reason, create, choose, and know God — and are appointed to care for the world as his representatives.",
+          "This single teaching grounds Christian ethics: every human life, from the powerful to the powerless, carries the image of God and therefore has dignity that no one may erase."
+        ],
+        verse: { text: "God created man in his own image. In God's image he created him; male and female he created them.", ref: "Genesis 1:27" },
+        terms: [
+          ["Image of God (Imago Dei)", "The unique likeness to God given to every human being, the basis of human dignity."],
+          ["Creation", "The teaching that everything that exists was freely made by God and declared good."],
+          ["Stewardship", "Humanity's calling to care for the created world on God's behalf."]
+        ]
+      },
+      {
+        t: "The Fall and Sin",
+        key: "Humanity turned away from God — an event called the Fall — and sin now runs through every human heart, fracturing our relationship with God, each other, and creation.",
+        body: [
+          "If the world was made good, why is it so broken? The Bible's answer is the Fall: the first humans, given real freedom, chose to distrust and disobey God (Genesis 3). Sin entered the world — and with it shame, blame, violence, and death.",
+          "Sin, in Christian teaching, is more than breaking rules. It is a broken relationship — putting ourselves in God's place, loving the wrong things or loving good things in the wrong order. Jesus taught that sin begins in the heart before it ever reaches the hands (Matthew 5).",
+          "Christianity is honest about this diagnosis because it is hopeful about the cure. The rest of the Bible's story is God's rescue mission: he does not abandon his fallen world, he sets out to redeem it. That plan runs through Israel, the covenants, and the prophets — and comes to its center in Jesus."
+        ],
+        verse: { text: "For all have sinned, and fall short of the glory of God.", ref: "Romans 3:23" },
+        terms: [
+          ["The Fall", "Humanity's original turn away from God, described in Genesis 3."],
+          ["Sin", "Rebellion against God — in desires, thoughts, words, and deeds — that separates us from him."],
+          ["Covenant", "A solemn, binding relationship God establishes with people, e.g. with Abraham, Israel, and finally through Christ."]
+        ]
+      }
+    ]
+  },
+  {
+    tag: "Module 2",
+    title: "Jesus Christ",
+    tagline: "The center of the faith: his identity, teaching, death, and resurrection.",
+    lessons: [
+      {
+        t: "Who Is Jesus?",
+        key: "Jesus of Nazareth is God the Son become human — fully God and fully man — the promised Messiah.",
+        body: [
+          "Christianity stands or falls on one question: who is Jesus? The Christian answer is staggering — the eternal Son of God became a human being. This is called the Incarnation (\"becoming flesh\"). Born to Mary in Bethlehem around 4 BC, raised in Nazareth, Jesus is not half-God and half-man, but fully both.",
+          "\"Christ\" is not Jesus' surname; it is a title — the Greek form of \"Messiah,\" meaning \"Anointed One.\" Israel had waited centuries for God's promised King. Christians confess that Jesus is that King, and more: Thomas falls before the risen Jesus and says, \"My Lord and my God\" (John 20:28).",
+          "Because Jesus is God, he can truly reveal God — \"whoever has seen me has seen the Father\" (John 14:9). Because he is human, he can truly stand in for us. Everything else in Christian teaching hangs on this."
+        ],
+        verse: { text: "In the beginning was the Word, and the Word was with God, and the Word was God... The Word became flesh and lived among us.", ref: "John 1:1, 14" },
+        terms: [
+          ["Incarnation", "God the Son taking on full human nature in Jesus."],
+          ["Messiah / Christ", "\"Anointed One\" — the promised deliverer and King of Israel."],
+          ["Son of God", "A title expressing Jesus' unique, eternal relationship to the Father."]
+        ]
+      },
+      {
+        t: "The Kingdom of God: Jesus' Teaching",
+        key: "Jesus announced that God's kingdom — God's rule of justice, mercy, and peace — was breaking into the world through him.",
+        body: [
+          "Jesus' central message was simple to say and endless to explore: \"The kingdom of God has come near; repent and believe the good news\" (Mark 1:15). The kingdom is not a place on a map but God's own reign — the world set right under God's rule.",
+          "He taught mostly in parables — short, vivid stories like the Prodigal Son, the Good Samaritan, and the Mustard Seed — that turn our assumptions upside down: the last are first, the humble are lifted up, the lost are sought until found.",
+          "His miracles — healing the sick, feeding crowds, calming storms — were not magic tricks but signs: previews of the kingdom, glimpses of a world without disease, hunger, or chaos. And his company scandalized the respectable: he ate with tax collectors and sinners, touched lepers, and welcomed children, showing that no one is beneath God's mercy."
+        ],
+        verse: { text: "The time is fulfilled, and the Kingdom of God is at hand! Repent, and believe in the Good News.", ref: "Mark 1:15" },
+        terms: [
+          ["Kingdom of God", "God's reign — begun in Jesus, growing now, to be completed when he returns."],
+          ["Parable", "A short story from ordinary life that reveals a truth about God's kingdom."],
+          ["Miracle (sign)", "An act of divine power pointing to who Jesus is and what his kingdom brings."]
+        ]
+      },
+      {
+        t: "The Cross",
+        key: "Jesus died on a Roman cross bearing the sin of the world — the ultimate act of God's love, reconciling humanity to God.",
+        body: [
+          "Every Gospel slows down dramatically when it reaches Jesus' final week. Betrayed by a friend, condemned in a rigged trial, Jesus was crucified outside Jerusalem around AD 30. Christians mark this day as Good Friday — \"good\" because of what his death accomplished.",
+          "The New Testament describes the cross from many angles: a sacrifice that deals with sin once for all; a ransom that sets captives free; a substitution — \"Christ died for our sins\" (1 Corinthians 15:3), the innocent for the guilty; a victory over evil, sin, and death; and above all a demonstration of love: \"God shows his own love toward us, in that while we were yet sinners, Christ died for us\" (Romans 5:8).",
+          "The teaching that Christ's death reconciles us to God is called the atonement — literally \"at-one-ment.\" On the cross, God himself, in the person of his Son, absorbed the cost of human sin so that forgiveness could be freely offered to everyone."
+        ],
+        verse: { text: "God shows his own love toward us, in that while we were yet sinners, Christ died for us.", ref: "Romans 5:8" },
+        terms: [
+          ["Atonement", "Christ's death dealing with sin and reconciling humanity to God."],
+          ["Good Friday", "The day Christians remember the crucifixion."],
+          ["Grace", "God's undeserved favor — love given as a gift, not a wage."]
+        ]
+      },
+      {
+        t: "The Resurrection",
+        key: "On the third day God raised Jesus bodily from the dead — the event on which all of Christianity rests.",
+        body: [
+          "Christianity did not begin with a philosophy; it began with an empty tomb. On the Sunday after the crucifixion — celebrated ever since as Easter — Jesus' followers found his tomb empty and then met him alive: talking, eating, showing his scars. Paul lists hundreds of eyewitnesses (1 Corinthians 15).",
+          "The resurrection is not a metaphor for spring or for hope in general. The apostles staked their lives on it as an event. Paul is blunt: \"If Christ has not been raised, your faith is futile\" (1 Corinthians 15:17). It is God's public verdict — vindicating everything Jesus said and did, and breaking the power of death itself.",
+          "It is also a preview: what happened to Jesus' body is what God promises for his people and, ultimately, his world — not escape from creation but its renewal. That is why the first Christians met on Sunday, the day of resurrection, and why hope is the signature Christian mood."
+        ],
+        verse: { text: "He is not here, but is risen!", ref: "Luke 24:6" },
+        terms: [
+          ["Resurrection", "God raising Jesus bodily from death to unending life — not mere resuscitation."],
+          ["Easter", "The celebration of the resurrection; the most important day of the Christian year."],
+          ["Apostle", "One of those sent out as an authorized witness of the risen Jesus."]
+        ]
+      },
+      {
+        t: "Ascension and Return",
+        key: "The risen Jesus reigns now as Lord, and Christians await his return, when he will judge the world and make all things new.",
+        body: [
+          "Forty days after Easter, Jesus ascended — he was taken up and enthroned at \"the right hand of the Father,\" the Bible's way of saying he now reigns over everything. Christians live under a King who is alive and in charge, praying and interceding for his people.",
+          "The New Testament ends with a promise: this same Jesus will come again. Christians disagree about the details, but the creed states the core plainly — he \"will come again to judge the living and the dead.\" History is going somewhere; evil will not have the last word.",
+          "This future is why Christians can face injustice without despair and success without pride. The judge of all the earth will do right, wipe away every tear, and make his home with humanity (Revelation 21). Until then, the church's job is witness: to live and announce the good news everywhere."
+        ],
+        verse: { text: "This Jesus, who was received up from you into the sky, will come back in the same way as you saw him going into the sky.", ref: "Acts 1:11" },
+        terms: [
+          ["Ascension", "Jesus' enthronement as reigning Lord, forty days after the resurrection."],
+          ["Second Coming", "The promised return of Christ to judge and renew the world."],
+          ["Lord", "The earliest Christian confession — \"Jesus is Lord\" — claiming his authority over all of life."]
+        ]
+      }
+    ]
+  },
+  {
+    tag: "Module 3",
+    title: "Salvation and the Spirit",
+    tagline: "How a person comes to God, and the life the Spirit gives.",
+    lessons: [
+      {
+        t: "The Gospel of Grace",
+        key: "Salvation is a gift. It cannot be earned by good behavior — it is received by grace, through what Christ has done.",
+        body: [
+          "\"Gospel\" means good news — not good advice. Advice tells you what to do; news tells you what has been done. The Christian gospel announces that God, in Christ, has already acted to rescue the world: Christ died for our sins, was buried, and was raised on the third day (1 Corinthians 15:3–4).",
+          "The hinge of this teaching is grace: God's favor given freely to people who do not deserve it. \"For by grace you have been saved through faith, and that not of yourselves; it is the gift of God, not of works, that no one would boast\" (Ephesians 2:8–9).",
+          "This sets Christianity apart from every system of self-salvation. Religion says: perform, and you will be accepted. The gospel says: you are accepted because of Christ — now live from that acceptance, not for it. Good works matter enormously, but as the fruit of salvation, never its price."
+        ],
+        verse: { text: "For by grace you have been saved through faith, and that not of yourselves; it is the gift of God, not of works, that no one would boast.", ref: "Ephesians 2:8–9" },
+        terms: [
+          ["Gospel", "The good news of what God has done in Christ's death and resurrection."],
+          ["Grace", "Undeserved favor; salvation as gift rather than wage."],
+          ["Justification", "God declaring a sinner righteous — forgiven and accepted — because of Christ."]
+        ]
+      },
+      {
+        t: "Faith and Repentance",
+        key: "The gift is received through repentance — turning from sin — and faith — entrusting yourself to Jesus.",
+        body: [
+          "How does anyone receive this gift? The New Testament's constant answer has two sides of one motion: repent and believe.",
+          "Repentance (Greek metanoia) means a change of mind that becomes a change of direction — turning around, away from a life centered on self and toward God. It is not groveling; Paul calls it a repentance \"that leads to life,\" and Jesus pictures it as coming home to a Father who runs to meet you (Luke 15).",
+          "Faith is not believing without evidence, and not mere intellectual agreement. It is trust — resting your whole weight on Christ, the way you trust a bridge by walking onto it. Abraham \"believed God, and it was credited to him as righteousness\" (Genesis 15:6). Anyone, anywhere, at any point in life can turn and trust; the thief crucified beside Jesus did it with his final breaths."
+        ],
+        verse: { text: "Believe in the Lord Jesus Christ, and you will be saved.", ref: "Acts 16:31" },
+        terms: [
+          ["Repentance", "A turning of mind, heart, and life away from sin and toward God."],
+          ["Faith", "Personal trust in Christ — reliance, not mere opinion."],
+          ["Conversion", "The whole turning to God in repentance and faith; being \"born again\" (John 3)."]
+        ]
+      },
+      {
+        t: "The Holy Spirit",
+        key: "The Holy Spirit is God present within believers — comforting, guiding, empowering, and making them like Christ.",
+        body: [
+          "The Holy Spirit is the third person of the Trinity — not a force or a feeling, but God himself, personally present. Jesus promised his disciples \"another Helper\" who would be with them forever (John 14:16), and at Pentecost (Acts 2), fifty days after Easter, the Spirit was poured out on the first believers — the birthday of the church.",
+          "The Spirit's work is rich: he convicts of sin, opens eyes to the truth of the gospel, unites believers to Christ, assures them that they are God's children, teaches through the Scriptures, and distributes gifts for serving others.",
+          "The most reliable evidence of the Spirit is not spectacle but character — what Paul calls the fruit of the Spirit: \"love, joy, peace, patience, kindness, goodness, faithfulness, gentleness, and self-control\" (Galatians 5:22–23). The Spirit's long project is to make people like Jesus."
+        ],
+        verse: { text: "But the fruit of the Spirit is love, joy, peace, patience, kindness, goodness, faith, gentleness, and self-control.", ref: "Galatians 5:22–23" },
+        terms: [
+          ["Holy Spirit", "The third person of the Trinity, God dwelling with and in his people."],
+          ["Pentecost", "The outpouring of the Spirit in Acts 2; the church's beginning."],
+          ["Fruit of the Spirit", "The Christlike character the Spirit grows in believers."]
+        ]
+      },
+      {
+        t: "New Life and Growth",
+        key: "Salvation begins a lifelong transformation — sanctification — lived out through ordinary practices of grace.",
+        body: [
+          "Becoming a Christian is a birth, not a graduation. The New Testament calls what follows sanctification: the slow, real transformation of a person into the likeness of Christ. It is God's work and our practice at once — \"work out your own salvation... for it is God who works in you\" (Philippians 2:12–13).",
+          "Growth happens through unglamorous means Christians have used for two thousand years: Scripture, prayer, worship with the church, communion, service, giving, confession of sin, and forgiveness of others. These are sometimes called spiritual disciplines — not ways of earning God's love, but ways of standing in the rain if you want to get wet.",
+          "Failure is part of the story. Christians still sin, and the remedy is always the same door they first entered: \"If we confess our sins, he is faithful and righteous to forgive us\" (1 John 1:9). The Christian life is a long walk of repentance, grace, and gradually growing love."
+        ],
+        verse: { text: "If anyone is in Christ, he is a new creation. The old things have passed away. Behold, all things have become new.", ref: "2 Corinthians 5:17" },
+        terms: [
+          ["Sanctification", "The lifelong process of being made holy — increasingly like Christ."],
+          ["Spiritual disciplines", "Practices (prayer, Scripture, fasting, service…) that open a life to God's grace."],
+          ["Confession", "Honestly naming sin before God (and sometimes others) to receive forgiveness."]
+        ]
+      }
+    ]
+  },
+  {
+    tag: "Module 4",
+    title: "Living the Faith",
+    tagline: "The Bible, prayer, the ethics of Jesus, and life in the church.",
+    lessons: [
+      {
+        t: "The Bible",
+        key: "The Bible is Christianity's sacred book: one story in two testaments, through which Christians believe God speaks.",
+        body: [
+          "The Bible is not one book but a library — 66 books in most Protestant Bibles (Catholic and Orthodox Bibles include several more, called the deuterocanonical books), written over roughly 1,500 years by many authors: history, law, poetry, prophecy, letters, and Gospels.",
+          "It has two great parts. The Old Testament tells of creation, the Fall, and God's covenant with Israel — and points forward. The New Testament tells of Jesus (in the four Gospels: Matthew, Mark, Luke, John), the birth of the church (Acts), letters to young churches (like Romans and Ephesians), and the end of the story (Revelation). Christians read it all as one story that centers on Christ.",
+          "Christians call Scripture \"inspired\" — \"God-breathed\" (2 Timothy 3:16) — meaning God speaks through these fully human words. A good way in for a beginner: start with the Gospel of Mark or John, read a little daily, and read with two questions — what does this show me about God, and how shall I respond?"
+        ],
+        verse: { text: "Every Scripture is God-breathed and profitable for teaching, for reproof, for correction, and for instruction in righteousness.", ref: "2 Timothy 3:16" },
+        terms: [
+          ["Old & New Testament", "The Bible's two parts: God's covenant story with Israel, and its fulfillment in Christ."],
+          ["Gospels", "Matthew, Mark, Luke, and John — the four accounts of Jesus' life, death, and resurrection."],
+          ["Inspiration", "The teaching that Scripture's human words are also God's word."]
+        ]
+      },
+      {
+        t: "Prayer and the Lord's Prayer",
+        key: "Prayer is honest conversation with God — and Jesus himself taught his followers exactly how to pray.",
+        body: [
+          "Prayer, in Christian teaching, is not a technique for getting things or a performance for an audience. It is a child talking to a Father who already knows and already loves. Jesus said to pray simply, privately, and persistently (Matthew 6).",
+          "When his disciples asked, \"Lord, teach us to pray,\" Jesus gave them the Lord's Prayer — the most-prayed words in history. Its shape is a curriculum: God's name honored, God's kingdom and will first; then our needs — daily bread (dependence), forgiveness (given and received), and protection from evil.",
+          "Christian prayer takes many forms — praise, thanksgiving, confession, and asking (for oneself and, in intercession, for others). And because Christ has opened the way, believers are invited to come boldly: \"Cast all your worries on him, because he cares for you\" (1 Peter 5:7). You'll find the full Lord's Prayer in the Texts tab."
+        ],
+        verse: { text: "Pray like this: Our Father in heaven, may your name be kept holy. Let your Kingdom come. Let your will be done on earth as it is in heaven.", ref: "Matthew 6:9–10" },
+        terms: [
+          ["The Lord's Prayer", "The model prayer Jesus taught (Matthew 6:9–13)."],
+          ["Intercession", "Praying on behalf of other people."],
+          ["Amen", "\"Truly / so be it\" — the ancient word of agreement ending prayers."]
+        ]
+      },
+      {
+        t: "The Great Commandments",
+        key: "Jesus summarized all of God's law in two commands: love God with everything you are, and love your neighbor as yourself.",
+        body: [
+          "Asked to name the greatest commandment, Jesus answered with two: \"Love the Lord your God with all your heart, soul, mind, and strength\" and \"Love your neighbor as yourself\" — adding that all the Law and the Prophets hang on these (Matthew 22:37–40). Christian ethics is love, ordered rightly: God first, neighbor as self.",
+          "This summarizes the Ten Commandments (see Texts): the first commandments concern love for God — no other gods, no idols, honoring his name and his day; the rest concern love for neighbor — honoring parents, and prohibiting murder, adultery, theft, false witness, and covetousness.",
+          "Jesus pressed love beyond all comfortable limits. Neighbor includes the stranger and even the enemy: \"Love your enemies, and pray for those who persecute you\" (Matthew 5:44). And he gave his followers one new command with his own life as its measure: \"Love one another, even as I have loved you\" (John 13:34)."
+        ],
+        verse: { text: "You shall love the Lord your God with all your heart, with all your soul, and with all your mind... You shall love your neighbor as yourself.", ref: "Matthew 22:37, 39" },
+        terms: [
+          ["The Great Commandments", "Love God entirely; love your neighbor as yourself."],
+          ["The Ten Commandments", "The core moral law given to Israel at Sinai (Exodus 20)."],
+          ["Agape", "The Greek word for self-giving love — love that seeks the other's good at cost to oneself."]
+        ]
+      },
+      {
+        t: "The Sermon on the Mount",
+        key: "Jesus' most famous teaching describes life in his kingdom: blessed are the humble, the merciful, the peacemakers.",
+        body: [
+          "The Sermon on the Mount (Matthew 5–7) is the fullest picture of the life Jesus calls his followers into. It opens with the Beatitudes — \"Blessed are the poor in spirit... those who mourn... the meek... those who hunger and thirst for righteousness... the merciful... the pure in heart... the peacemakers...\" — announcing that God's favor rests exactly where the world least expects it.",
+          "The sermon then goes deep beneath behavior to the heart: anger is the root of murder, lust the root of adultery. It calls for truthfulness without oaths, generosity without display, forgiveness without limit, and trust without anxiety — \"seek first God's Kingdom and his righteousness, and all these things will be given to you as well\" (Matthew 6:33).",
+          "It also contains the Golden Rule: \"Whatever you desire for men to do to you, you shall also do to them\" (Matthew 7:12). Jesus ends with a warning and an invitation: whoever hears these words and does them is like a person who built a house on rock. The full Beatitudes are in the Texts tab."
+        ],
+        verse: { text: "Blessed are the merciful, for they shall obtain mercy. Blessed are the pure in heart, for they shall see God. Blessed are the peacemakers, for they shall be called children of God.", ref: "Matthew 5:7–9" },
+        terms: [
+          ["Beatitudes", "The eight \"Blessed are...\" sayings opening the Sermon on the Mount."],
+          ["Golden Rule", "Treat others as you would want to be treated (Matthew 7:12)."],
+          ["Disciple", "A learner-apprentice of Jesus — one who follows in order to become like him."]
+        ]
+      },
+      {
+        t: "The Church, Baptism, and Communion",
+        key: "Christian faith is lived in community. The church is Christ's people, marked by two great practices he gave: baptism and communion.",
+        body: [
+          "Christianity was never designed to be practiced alone. The New Testament calls the church the \"body of Christ\" — many different members, one life (1 Corinthians 12) — and the \"family of God.\" Christians gather (traditionally on Sunday, the day of resurrection) to worship, hear the Scriptures, pray, and care for one another and their neighbors.",
+          "Jesus gave his people two great practices (Catholics and Orthodox count seven sacraments; most Protestants speak of these two). Baptism — washing with water in the name of the Father, Son, and Holy Spirit — marks entry into Christ and his people: an outward sign of cleansing from sin and new life. Communion — also called the Lord's Supper or Eucharist (\"thanksgiving\") — is the shared bread and cup Jesus instituted at the Last Supper: \"This is my body... this is my blood... do this in memory of me.\" Traditions understand exactly how Christ is present in it differently, but all receive it as a real meeting with him.",
+          "The church is not a club for the finished but a hospital for the recovering — flawed, yet the place where faith is fed. For a newcomer, simply visiting a local church and listening is one of the best ways to learn."
+        ],
+        verse: { text: "For as the body is one and has many members... so also is Christ. Now you are the body of Christ, and members individually.", ref: "1 Corinthians 12:12, 27" },
+        terms: [
+          ["Church", "The community of all who belong to Christ — local and worldwide."],
+          ["Baptism", "The water rite of entry into Christ and his church."],
+          ["Communion / Eucharist", "The bread-and-cup meal Jesus gave to remember and receive him."]
+        ]
+      }
+    ]
+  },
+  {
+    tag: "Module 5",
+    title: "Hope, Creed, and the Christian Family",
+    tagline: "Where the story ends, how the faith is summarized, and the major traditions.",
+    lessons: [
+      {
+        t: "Christian Hope",
+        key: "Christian hope is resurrection: not escaping the world, but God raising his people and renewing all creation — no more death, mourning, or pain.",
+        body: [
+          "Ask what Christians hope for and many will say \"going to heaven.\" That's part of it — Jesus promised the dying thief, \"today you will be with me in Paradise\" (Luke 23:43) — but the Bible's final hope is bigger: resurrection of the body and \"a new heaven and a new earth\" (Revelation 21:1). The story ends not with souls floating away from the world, but with God coming to dwell with his people in a renewed creation.",
+          "In that renewed world, \"God will wipe away every tear from their eyes. Death will be no more; neither will there be mourning, nor crying, nor pain any more\" (Revelation 21:4). Justice will finally be done, and everything sad will come untrue.",
+          "This hope changes the present. It makes Christians able to grieve \"but not as those who have no hope\" (1 Thessalonians 4:13), to work for justice and mercy now — since this world matters and its repair has begun — and to face their own death with peace. Faith, hope, and love, Paul says, are what remain; and the greatest of these is love."
+        ],
+        verse: { text: "God will wipe away every tear from their eyes. Death will be no more; neither will there be mourning, nor crying, nor pain any more.", ref: "Revelation 21:4" },
+        terms: [
+          ["Resurrection of the body", "God's promise to raise his people to embodied, unending life, as he raised Jesus."],
+          ["New creation", "The renewed heavens and earth where God dwells with humanity."],
+          ["Eternal life", "Life with God that begins now, in knowing Christ, and never ends (John 17:3)."]
+        ]
+      },
+      {
+        t: "The Apostles' Creed: the Faith in Summary",
+        key: "For over 1,500 years, Christians have summarized the whole faith in the Apostles' Creed — a map of everything you've been learning.",
+        body: [
+          "From its earliest days, the church condensed its faith into creeds — brief statements a new believer could learn by heart and confess at baptism. The two most widely used are the Apostles' Creed and the longer Nicene Creed (AD 325/381), shared by Catholic, Orthodox, and most Protestant churches alike.",
+          "The Apostles' Creed has three movements, matching the Trinity: the Father and creation; the Son — his birth, death, resurrection, ascension, and return; and the Holy Spirit — with the church, forgiveness, resurrection, and everlasting life. Notice that most of it simply retells the story you have now studied.",
+          "Creeds are not a replacement for personal faith but its grammar — the shared skeleton on which two thousand years of Christians, in every language and culture, hang the same confession. Read the full text in the Texts tab, slowly; you'll recognize every line."
+        ],
+        verse: { text: "Hold the pattern of sound words which you have heard from me, in faith and love which is in Christ Jesus.", ref: "2 Timothy 1:13" },
+        terms: [
+          ["Apostles' Creed", "The ancient baptismal summary of Christian belief."],
+          ["Nicene Creed", "The fuller creed defined by the early church councils, confessed worldwide."],
+          ["Orthodoxy", "\"Right belief\" — the core teachings shared across the Christian church."]
+        ]
+      },
+      {
+        t: "One Faith, Many Traditions",
+        key: "Christianity's three great branches — Catholic, Orthodox, and Protestant — differ in real ways, yet share the same core: the Trinity, the creeds, and Christ crucified and risen.",
+        body: [
+          "Today about 2.4 billion people — roughly a third of humanity — identify as Christian, in three broad families. The Catholic Church, the largest, is led by the Pope and emphasizes the sacraments and the continuity of tradition. The Orthodox churches (Eastern and Oriental), rooted in the ancient eastern Mediterranean, split from Rome in 1054 and are known for their liturgy, icons, and deep continuity with the early church. Protestant churches (Lutheran, Anglican, Baptist, Methodist, Pentecostal, and many more) arose from the 16th-century Reformation, stressing Scripture's authority and salvation by grace through faith.",
+          "The differences are real — about authority (Pope, councils, Scripture), the number and meaning of sacraments, and forms of worship — and this app has flagged them where they matter. But the shared core is far larger: one God in three persons; Jesus Christ fully God and fully man, crucified for sins and bodily risen; the Bible as God's word; baptism and the Lord's Supper; the creeds; and the hope of resurrection. That shared core is sometimes called \"mere Christianity.\"",
+          "Where to go from here: read a Gospel (Mark is the shortest, John the deepest); try praying the Lord's Prayer daily; and visit a church near you and listen. This app has given you the map — the faith itself is learned the way the first disciples learned it: by following."
+        ],
+        verse: { text: "One Lord, one faith, one baptism, one God and Father of all, who is over all, and through all, and in us all.", ref: "Ephesians 4:5–6" },
+        terms: [
+          ["Catholic", "The communion of churches in union with the Pope; \"catholic\" itself means universal."],
+          ["Orthodox", "The ancient eastern churches, e.g. Greek and Russian Orthodox."],
+          ["Protestant", "Churches stemming from the Reformation, emphasizing Scripture and grace through faith."]
+        ]
+      }
+    ]
+  }
+];
+
+/* ============================== QUIZ BANK ============================== */
+
+const QUESTIONS = [
+  { q: "How many Gods do Christians believe in?", opts: ["Three", "One", "One for each nation", "It is unknowable"], a: 1, why: "Christianity is monotheistic: one God — who exists eternally as three persons, Father, Son, and Holy Spirit." },
+  { q: "The Trinity means…", opts: ["Three separate gods working together", "One God who appears in three costumes", "One God in three persons: Father, Son, and Holy Spirit", "God, Mary, and Jesus"], a: 2, why: "One God, three distinct persons, fully equal — not three gods, and not one person in masks." },
+  { q: "What does it mean that humans are made \"in the image of God\"?", opts: ["Humans physically look like God", "Every person has unique dignity and is made to know and reflect God", "Only religious people carry God's image", "Humans are divine"], a: 1, why: "The image of God grounds the dignity of every human being and our calling to love, create, and care for the world." },
+  { q: "In Christian teaching, sin is best described as…", opts: ["Breaking social conventions", "Only major crimes", "Turning from God — a broken relationship that shows up in heart, word, and deed", "Bad luck"], a: 2, why: "Sin is deeper than rule-breaking: it is putting ourselves in God's place. Jesus taught it begins in the heart." },
+  { q: "What does \"Christ\" mean?", opts: ["Jesus' family name", "Teacher", "Prophet", "\"Anointed One\" — the promised Messiah-King"], a: 3, why: "\"Christ\" is a title, the Greek form of \"Messiah\": God's promised, anointed King." },
+  { q: "The Incarnation is the teaching that…", opts: ["God the Son became fully human in Jesus", "Jesus became God at his baptism", "Jesus was an angel in a body", "God replaced Jesus' human soul"], a: 0, why: "Jesus is fully God and fully man — the eternal Son who \"became flesh and lived among us\" (John 1:14)." },
+  { q: "What was the central theme of Jesus' preaching?", opts: ["The kingdom of God", "The Roman Empire's corruption", "Dietary laws", "Philosophy of the soul"], a: 0, why: "\"The kingdom of God has come near; repent and believe the good news\" (Mark 1:15) — God's reign breaking in through Jesus." },
+  { q: "A parable is…", opts: ["A miracle story", "A short story from ordinary life revealing a truth about God's kingdom", "An ancient law", "A kind of prayer"], a: 1, why: "Jesus taught mostly in parables — like the Prodigal Son and the Good Samaritan." },
+  { q: "What do Christians believe Jesus' death on the cross accomplished?", opts: ["It was only a tragic injustice", "It reconciled humanity to God, dealing with sin — the atonement", "It ended the Roman Empire", "It proved suffering is an illusion"], a: 1, why: "\"Christ died for our sins\" (1 Cor 15:3): the cross is God's act of love that makes forgiveness possible — the atonement." },
+  { q: "What happened on the third day after Jesus' crucifixion?", opts: ["His followers moved to Rome", "The temple was destroyed", "God raised him bodily from the dead", "His teachings were written down"], a: 2, why: "The resurrection — celebrated at Easter — is the event Christianity rests on: \"If Christ has not been raised, your faith is futile\" (1 Cor 15:17)." },
+  { q: "Paul says that if Christ has not been raised…", opts: ["Christian faith is futile", "Nothing changes", "The church should keep his ethics anyway", "Another Messiah will come"], a: 0, why: "1 Corinthians 15:17 — the resurrection is not an optional extra; it is the foundation." },
+  { q: "According to Ephesians 2:8–9, people are saved…", opts: ["By being better than average", "By religious rituals alone", "By grace through faith — as a gift, not by works", "By keeping all the commandments perfectly"], a: 2, why: "Salvation is God's gift received by faith. Good works are the fruit of salvation, not its price." },
+  { q: "\"Repentance\" means…", opts: ["Feeling guilty forever", "A change of mind and direction — turning from sin toward God", "Paying for your sins", "Public humiliation"], a: 1, why: "Metanoia: turning around and coming home to God — like the prodigal son returning to the father." },
+  { q: "In Christian teaching, faith is best described as…", opts: ["Believing without any evidence", "Intellectual agreement with doctrines", "Personal trust — resting your weight on Christ", "Optimism about life"], a: 2, why: "Faith is trust, like trusting a bridge by walking onto it — not mere opinion, and not blind." },
+  { q: "Who or what is the Holy Spirit?", opts: ["An impersonal energy", "An angel", "A symbol for enthusiasm", "God himself — the third person of the Trinity, present in believers"], a: 3, why: "The Spirit is fully God and fully personal: the promised Helper, poured out at Pentecost." },
+  { q: "Which list is the \"fruit of the Spirit\"?", opts: ["Wealth, health, success, fame", "Love, joy, peace, patience, kindness, goodness, faithfulness, gentleness, self-control", "Visions, tongues, miracles only", "Fasting, tithing, pilgrimage"], a: 1, why: "Galatians 5:22–23 — the Spirit's surest evidence is Christlike character." },
+  { q: "\"Sanctification\" refers to…", opts: ["The moment of conversion", "Church membership", "The lifelong process of becoming like Christ", "Being ordained as clergy"], a: 2, why: "A birth begins the Christian life; sanctification is the long growth that follows, by God's grace and our practice." },
+  { q: "The Bible's two main parts are…", opts: ["The Gospels and the Psalms", "The Old Testament and the New Testament", "The Law and the Letters", "History and prophecy"], a: 1, why: "The Old Testament tells God's covenant story with Israel; the New Testament tells its fulfillment in Christ." },
+  { q: "Which four books are the Gospels?", opts: ["Genesis, Exodus, Leviticus, Numbers", "Romans, Corinthians, Galatians, Ephesians", "Matthew, Mark, Luke, John", "Acts, Hebrews, James, Revelation"], a: 2, why: "The four Gospels are the accounts of Jesus' life, death, and resurrection — a great place to start reading." },
+  { q: "Which prayer did Jesus teach his disciples?", opts: ["The Serenity Prayer", "The Lord's Prayer (\"Our Father…\")", "The Jesus Psalm", "The Creed"], a: 1, why: "Matthew 6:9–13 — the model prayer: God's name, kingdom, and will first; then bread, forgiveness, and protection." },
+  { q: "Jesus said all the Law and the Prophets hang on…", opts: ["Loving God entirely and loving your neighbor as yourself", "Keeping the Sabbath", "The food laws", "Temple sacrifice"], a: 0, why: "The two Great Commandments (Matthew 22:37–40) are Jesus' own summary of all of God's law." },
+  { q: "The Beatitudes begin the…", opts: ["Book of Revelation", "Last Supper", "Ten Commandments", "Sermon on the Mount"], a: 3, why: "Matthew 5–7. \"Blessed are the poor in spirit… the merciful… the peacemakers…\"" },
+  { q: "What is the Golden Rule?", opts: ["An eye for an eye", "Do to others whatever you would want them to do to you", "Give gold to the temple", "The strong should rule the weak"], a: 1, why: "Matthew 7:12, from the Sermon on the Mount." },
+  { q: "The two practices Jesus gave his church (recognized by all traditions) are…", opts: ["Pilgrimage and fasting", "Baptism and Communion (the Lord's Supper)", "Choir and confession", "Tithing and Sabbath"], a: 1, why: "Baptism marks entry into Christ; Communion is the bread-and-cup meal he instituted. (Catholics and Orthodox count seven sacraments in total.)" },
+  { q: "In the New Testament, the church is called…", opts: ["The body of Christ", "The house of angels", "The council of elders", "The chosen empire"], a: 0, why: "1 Corinthians 12: many members, one body — Christian faith is lived in community." },
+  { q: "The Bible's final hope is…", opts: ["Souls escaping the material world forever", "Endless reincarnation", "Resurrection of the body and a renewed creation, with no more death or pain", "That history repeats itself"], a: 2, why: "Revelation 21: a new heaven and new earth, God dwelling with his people, every tear wiped away." },
+  { q: "The Apostles' Creed is structured around…", opts: ["The Ten Commandments", "The three persons of the Trinity", "The seven days of creation", "The twelve apostles' biographies"], a: 1, why: "Father and creation; Son — died, risen, returning; Holy Spirit — church, forgiveness, resurrection, life everlasting." },
+  { q: "The three great branches of Christianity are…", opts: ["Baptist, Methodist, Lutheran", "Eastern, Western, Southern", "Catholic, Orthodox, and Protestant", "Ancient, medieval, modern"], a: 2, why: "They differ in real ways, yet share the creeds, the Trinity, and Christ crucified and risen — \"mere Christianity.\"" },
+  { q: "At Pentecost (Acts 2)…", opts: ["Jesus was born", "The Holy Spirit was poured out on the first believers — the church's beginning", "The Bible was completed", "The temple was rebuilt"], a: 1, why: "Fifty days after Easter, the promised Spirit came, and about three thousand people were baptized." },
+  { q: "\"Gospel\" literally means…", opts: ["Good news", "Holy book", "God's law", "Sacred song"], a: 0, why: "News, not advice: the announcement of what God has already done in Christ." }
+];
+
+/* ============================== TEXTS ============================== */
+
+const TEXTS = [
+  {
+    title: "The Lord's Prayer",
+    sub: "Matthew 6:9–13 — the prayer Jesus taught",
+    body: `Our Father in heaven,
+hallowed be your name.
+Your kingdom come,
+your will be done,
+on earth as it is in heaven.
+Give us this day our daily bread,
+and forgive us our debts,
+as we also have forgiven our debtors.
+And lead us not into temptation,
+but deliver us from evil.
+For yours is the kingdom and the power
+and the glory forever. Amen.`
+  },
+  {
+    title: "The Apostles' Creed",
+    sub: "The ancient summary of the faith",
+    body: `I believe in God, the Father almighty,
+creator of heaven and earth.
+
+I believe in Jesus Christ, his only Son, our Lord,
+who was conceived by the Holy Spirit,
+born of the Virgin Mary,
+suffered under Pontius Pilate,
+was crucified, died, and was buried;
+he descended to the dead.
+On the third day he rose again;
+he ascended into heaven,
+he is seated at the right hand of the Father,
+and he will come again to judge the living and the dead.
+
+I believe in the Holy Spirit,
+the holy catholic* church,
+the communion of saints,
+the forgiveness of sins,
+the resurrection of the body,
+and the life everlasting. Amen.`,
+    note: "*\"catholic\" here means \"universal\" — the whole church across the world and centuries."
+  },
+  {
+    title: "The Ten Commandments",
+    sub: "Exodus 20 — summarized",
+    list: [
+      "You shall have no other gods before me.",
+      "You shall not make for yourself an idol.",
+      "You shall not misuse the name of the Lord your God.",
+      "Remember the Sabbath day, to keep it holy.",
+      "Honor your father and your mother.",
+      "You shall not murder.",
+      "You shall not commit adultery.",
+      "You shall not steal.",
+      "You shall not give false testimony against your neighbor.",
+      "You shall not covet what belongs to your neighbor."
+    ],
+    note: "Numbering varies slightly between traditions; the content is the same."
+  },
+  {
+    title: "The Beatitudes",
+    sub: "Matthew 5:3–10 — opening the Sermon on the Mount",
+    body: `Blessed are the poor in spirit,
+for theirs is the kingdom of heaven.
+Blessed are those who mourn,
+for they shall be comforted.
+Blessed are the meek,
+for they shall inherit the earth.
+Blessed are those who hunger and thirst for righteousness,
+for they shall be filled.
+Blessed are the merciful,
+for they shall obtain mercy.
+Blessed are the pure in heart,
+for they shall see God.
+Blessed are the peacemakers,
+for they shall be called children of God.
+Blessed are those who are persecuted for righteousness' sake,
+for theirs is the kingdom of heaven.`
+  },
+  {
+    title: "The Two Great Commandments",
+    sub: "Matthew 22:37–40",
+    body: `"You shall love the Lord your God with all your heart, with all your soul, and with all your mind. This is the first and great commandment.
+
+A second likewise is this: You shall love your neighbor as yourself.
+
+The whole law and the prophets depend on these two commandments."`
+  },
+  {
+    title: "The Fruit of the Spirit",
+    sub: "Galatians 5:22–23",
+    body: `Love, joy, peace,
+patience, kindness, goodness,
+faithfulness, gentleness, self-control.
+
+"Against such things there is no law."`
+  },
+  {
+    title: "John 3:16",
+    sub: "The gospel in one sentence",
+    body: `"For God so loved the world, that he gave his only Son, that whoever believes in him should not perish, but have eternal life."`
+  },
+  {
+    title: "How the Bible Is Organized",
+    sub: "A one-minute map",
+    body: `OLD TESTAMENT (39 books)
+• Law (Genesis–Deuteronomy): creation, the Fall, Israel's founding story.
+• History (Joshua–Esther): Israel in the land, kings, exile, return.
+• Poetry & Wisdom (Job–Song of Songs): Psalms for prayer, Proverbs for life.
+• Prophets (Isaiah–Malachi): calls to faithfulness, promises of the Messiah.
+
+NEW TESTAMENT (27 books)
+• Gospels (Matthew, Mark, Luke, John): the life, death, and resurrection of Jesus.
+• Acts: the Spirit and the early church.
+• Letters (Romans–Jude): teaching for the young churches.
+• Revelation: the end of the story — all things made new.`,
+    note: "Catholic and Orthodox Bibles include several additional Old Testament books (the deuterocanonical books)."
+  }
+];
+
+/* ============================== STATE & APP ============================== */
+
+const store = {
+  read() {
+    try { return JSON.parse(localStorage.getItem("foundations") || "{}"); }
+    catch { return {}; }
+  },
+  write(s) { localStorage.setItem("foundations", JSON.stringify(s)); }
+};
+
+let state = store.read();
+state.done = state.done || {};           // "m-l" -> true
+state.bestScore = state.bestScore ?? null;
+state.quizzesTaken = state.quizzesTaken || 0;
+
+const app = document.getElementById("app");
+const tabsEl = document.getElementById("tabs");
+let tab = "learn";
+let view = { screen: "modules" };        // learn navigation
+let quiz = null;                          // active quiz state
+
+const TABS = [
+  { id: "learn", label: "Learn", ic: "📖" },
+  { id: "quiz", label: "Quiz", ic: "✍️" },
+  { id: "texts", label: "Texts", ic: "🕊️" },
+  { id: "progress", label: "Progress", ic: "🌱" }
+];
+
+function esc(s) {
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+function renderTabs() {
+  tabsEl.innerHTML = TABS.map(t =>
+    `<button class="${tab === t.id ? "active" : ""}" data-tab="${t.id}">
+       <span class="ic">${t.ic}</span>${t.label}
+     </button>`).join("");
+}
+
+tabsEl.addEventListener("click", e => {
+  const b = e.target.closest("button[data-tab]");
+  if (!b) return;
+  tab = b.dataset.tab;
+  if (tab === "learn") view = { screen: "modules" };
+  render();
+  window.scrollTo(0, 0);
+});
+
+/* ---------- Learn ---------- */
+
+function lessonsDoneIn(mi) {
+  return MODULES[mi].lessons.filter((_, li) => state.done[mi + "-" + li]).length;
+}
+
+function renderModules() {
+  const totalDone = Object.keys(state.done).length;
+  const total = MODULES.reduce((n, m) => n + m.lessons.length, 0);
+  return `
+    <header class="appbar">
+      <h1>Foundations</h1>
+      <p>The main teachings of Christianity · ${totalDone}/${total} lessons complete</p>
+    </header>
+    ${MODULES.map((m, mi) => `
+      <div class="card">
+        <div class="module-head">
+          <span class="module-tag">${m.tag} · ${lessonsDoneIn(mi)}/${m.lessons.length}</span>
+          <h2>${esc(m.title)}</h2>
+          <p>${esc(m.tagline)}</p>
+        </div>
+        <div style="margin-top:10px">
+          ${m.lessons.map((l, li) => `
+            <div class="lesson-row ${state.done[mi + "-" + li] ? "done" : ""}" data-m="${mi}" data-l="${li}">
+              <span class="dot">${state.done[mi + "-" + li] ? "✓" : ""}</span>
+              <span class="t">${esc(l.t)}</span>
+              <span class="chev">›</span>
+            </div>`).join("")}
+        </div>
+      </div>`).join("")}
+    <p class="footnote">Scripture quotations follow the World English Bible and traditional liturgical texts (public domain). Where major traditions differ, lessons say so.</p>`;
+}
+
+function renderLesson(mi, li) {
+  const m = MODULES[mi], l = m.lessons[li];
+  const done = !!state.done[mi + "-" + li];
+  const nextLi = li + 1 < m.lessons.length ? li + 1 : null;
+  const nextMi = nextLi === null && mi + 1 < MODULES.length ? mi + 1 : null;
+  return `
+    <div class="lesson-view">
+      <button class="backlink" data-act="back">‹ All lessons</button>
+      <span class="kicker">${m.tag} · Lesson ${li + 1} of ${m.lessons.length}</span>
+      <h2>${esc(l.t)}</h2>
+      <div class="keyidea">${esc(l.key)}</div>
+      <div class="body">${l.body.map(p => `<p>${p}</p>`).join("")}</div>
+      <div class="verse">
+        <div class="vtext">“${esc(l.verse.text)}”</div>
+        <div class="vref">${esc(l.verse.ref)}</div>
+      </div>
+      <div class="terms">
+        <h3>Key terms</h3>
+        <dl>${l.terms.map(([t, d]) => `<div><dt>${esc(t)}</dt><dd>${esc(d)}</dd></div>`).join("")}</dl>
+      </div>
+      <button class="btn ${done ? "done" : "primary"}" data-act="toggle-done" data-m="${mi}" data-l="${li}">
+        ${done ? "✓ Completed — tap to unmark" : "Mark lesson complete"}
+      </button>
+      ${nextLi !== null
+        ? `<button class="btn ghost" data-act="open" data-m="${mi}" data-l="${nextLi}">Next: ${esc(m.lessons[nextLi].t)} ›</button>`
+        : nextMi !== null
+          ? `<button class="btn ghost" data-act="open" data-m="${nextMi}" data-l="0">Next module: ${esc(MODULES[nextMi].title)} ›</button>`
+          : `<button class="btn ghost" data-act="back">You've reached the end — see all lessons</button>`}
+    </div>`;
+}
+
+/* ---------- Quiz ---------- */
+
+function startQuiz() {
+  const pool = [...QUESTIONS];
+  for (let i = pool.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [pool[i], pool[j]] = [pool[j], pool[i]];
+  }
+  quiz = { qs: pool.slice(0, 10), i: 0, score: 0, picked: null };
+}
+
+function renderQuiz() {
+  if (!quiz) {
+    return `
+      <header class="appbar"><h1>Quiz</h1><p>Check what you've learned</p></header>
+      <div class="card">
+        <p style="font-size:15.5px">Ten questions, drawn at random from all five modules. Each answer comes with a short explanation — wrong answers teach as much as right ones.</p>
+        ${state.bestScore !== null ? `<p style="margin-top:10px;color:var(--muted);font-size:14px">Best score: <b style="color:var(--indigo)">${state.bestScore}/10</b> · Quizzes taken: ${state.quizzesTaken}</p>` : ""}
+        <button class="btn primary" data-act="start-quiz">Start quiz</button>
+      </div>`;
+  }
+  if (quiz.i >= quiz.qs.length) {
+    const s = quiz.score;
+    const msg = s >= 9 ? "Excellent — you know the foundations well."
+      : s >= 7 ? "Strong work — a quick review will lock it in."
+      : s >= 5 ? "Good start — revisit a lesson or two and try again."
+      : "A perfect excuse to reread — every attempt teaches.";
+    return `
+      <header class="appbar"><h1>Quiz</h1><p>Results</p></header>
+      <div class="card">
+        <div class="score-big">${s}/10</div>
+        <div class="score-sub">${msg}</div>
+        <button class="btn primary" data-act="start-quiz">Try again</button>
+        <button class="btn ghost" data-act="quit-quiz">Back to quiz home</button>
+      </div>`;
+  }
+  const q = quiz.qs[quiz.i];
+  const answered = quiz.picked !== null;
+  return `
+    <header class="appbar"><h1>Quiz</h1><p class="quiz-meta">Question ${quiz.i + 1} of ${quiz.qs.length} · Score ${quiz.score}</p></header>
+    <div class="card">
+      <div class="quiz-q">${esc(q.q)}</div>
+      ${q.opts.map((o, oi) => {
+        let cls = "opt";
+        if (answered && oi === q.a) cls += " correct";
+        else if (answered && oi === quiz.picked && oi !== q.a) cls += " wrong";
+        return `<button class="${cls}" data-act="pick" data-o="${oi}" ${answered ? "disabled" : ""}>${esc(o)}</button>`;
+      }).join("")}
+      ${answered ? `<div class="why">${quiz.picked === q.a ? "✓ Correct. " : ""}${esc(q.why)}</div>
+        <button class="btn primary" data-act="next-q">${quiz.i + 1 < quiz.qs.length ? "Next question" : "See results"}</button>` : ""}
+    </div>`;
+}
+
+/* ---------- Texts ---------- */
+
+let openText = null;
+
+function renderTexts() {
+  return `
+    <header class="appbar"><h1>Texts</h1><p>The great texts of the faith — for reading and memorizing</p></header>
+    ${TEXTS.map((t, ti) => `
+      <div class="card text-card tappable ${openText === ti ? "open" : ""}" data-act="text" data-t="${ti}">
+        <h3>${esc(t.title)}</h3>
+        <div class="sub">${esc(t.sub)}</div>
+        <div class="text-body">
+          ${t.body ? `<p>${esc(t.body)}</p>` : ""}
+          ${t.list ? `<ol>${t.list.map(x => `<li>${esc(x)}</li>`).join("")}</ol>` : ""}
+          ${t.note ? `<p class="note">${esc(t.note)}</p>` : ""}
+        </div>
+      </div>`).join("")}`;
+}
+
+/* ---------- Progress ---------- */
+
+function renderProgress() {
+  const total = MODULES.reduce((n, m) => n + m.lessons.length, 0);
+  const done = Object.keys(state.done).length;
+  const pct = Math.round((done / total) * 100);
+  return `
+    <header class="appbar"><h1>Progress</h1><p>${done} of ${total} lessons · ${pct}% complete</p></header>
+    <div class="card">
+      ${MODULES.map((m, mi) => {
+        const d = lessonsDoneIn(mi);
+        return `<div class="prog-row">
+          <div class="lbl"><span>${esc(m.title)}</span><span>${d}/${m.lessons.length}</span></div>
+          <div class="bar"><i style="width:${(d / m.lessons.length) * 100}%"></i></div>
+        </div>`;
+      }).join("<div style='height:14px'></div>")}
+    </div>
+    <div class="card">
+      <div class="lbl" style="display:flex;justify-content:space-between;font-weight:600;font-size:14.5px">
+        <span>Best quiz score</span><span style="color:var(--indigo)">${state.bestScore === null ? "—" : state.bestScore + "/10"}</span>
+      </div>
+      <div class="lbl" style="display:flex;justify-content:space-between;font-weight:600;font-size:14.5px;margin-top:6px">
+        <span>Quizzes taken</span><span style="color:var(--indigo)">${state.quizzesTaken}</span>
+      </div>
+    </div>
+    <button class="btn ghost" data-act="reset">Reset all progress</button>
+    <p class="footnote">All progress is stored only on this device.</p>`;
+}
+
+/* ---------- Render & events ---------- */
+
+function render() {
+  renderTabs();
+  if (tab === "learn") {
+    app.innerHTML = view.screen === "lesson" ? renderLesson(view.m, view.l) : renderModules();
+  } else if (tab === "quiz") {
+    app.innerHTML = renderQuiz();
+  } else if (tab === "texts") {
+    app.innerHTML = renderTexts();
+  } else {
+    app.innerHTML = renderProgress();
+  }
+}
+
+app.addEventListener("click", e => {
+  const row = e.target.closest(".lesson-row");
+  if (row) {
+    view = { screen: "lesson", m: +row.dataset.m, l: +row.dataset.l };
+    render(); window.scrollTo(0, 0); return;
+  }
+  const el = e.target.closest("[data-act]");
+  if (!el) return;
+  const act = el.dataset.act;
+
+  if (act === "back") { view = { screen: "modules" }; render(); window.scrollTo(0, 0); }
+  else if (act === "open") { view = { screen: "lesson", m: +el.dataset.m, l: +el.dataset.l }; render(); window.scrollTo(0, 0); }
+  else if (act === "toggle-done") {
+    const k = el.dataset.m + "-" + el.dataset.l;
+    if (state.done[k]) delete state.done[k]; else state.done[k] = true;
+    store.write(state); render();
+  }
+  else if (act === "start-quiz") { startQuiz(); render(); window.scrollTo(0, 0); }
+  else if (act === "quit-quiz") { quiz = null; render(); }
+  else if (act === "pick") {
+    if (quiz.picked !== null) return;
+    quiz.picked = +el.dataset.o;
+    if (quiz.picked === quiz.qs[quiz.i].a) quiz.score++;
+    render();
+  }
+  else if (act === "next-q") {
+    quiz.i++; quiz.picked = null;
+    if (quiz.i >= quiz.qs.length) {
+      state.quizzesTaken++;
+      if (state.bestScore === null || quiz.score > state.bestScore) state.bestScore = quiz.score;
+      store.write(state);
+    }
+    render(); window.scrollTo(0, 0);
+  }
+  else if (act === "text") {
+    const ti = +el.dataset.t;
+    openText = openText === ti ? null : ti;
+    render();
+  }
+  else if (act === "reset") {
+    if (confirm("Reset all lesson progress and quiz scores?")) {
+      state = { done: {}, bestScore: null, quizzesTaken: 0 };
+      store.write(state); render();
+    }
+  }
+});
+
+render();
+
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));
+}
+</script>
+</body>
+</html>
