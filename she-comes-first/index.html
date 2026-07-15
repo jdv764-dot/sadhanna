@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no" />
+<title>First</title>
+<meta name="description" content="A private study companion for becoming a more generous, skilled, and attentive lover." />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="First" />
+<meta name="theme-color" content="#171019" />
+<link rel="manifest" href="manifest.webmanifest" />
+<link rel="apple-touch-icon" href="icon-180.png" />
+<link rel="icon" type="image/png" href="icon-180.png" />
+<style>
+  :root {
+    --bg: #171019;
+    --surface: #241826;
+    --surface-hi: #322234;
+    --line: #3d2a40;
+    --rose: #d48a96;
+    --rose-soft: #e7b3bb;
+    --gold: #d9a45b;
+    --text: #efe6e0;
+    --muted: #a48ea6;
+    --good: #8fbf9f;
+    --serif: ui-serif, "New York", Georgia, "Times New Roman", serif;
+    --sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    line-height: 1.6;
+    overscroll-behavior-y: none;
+    -webkit-font-smoothing: antialiased;
+  }
+  #app {
+    max-width: 560px;
+    margin: 0 auto;
+    min-height: 100dvh;
+    padding: calc(env(safe-area-inset-top) + 18px) 20px calc(env(safe-area-inset-bottom) + 96px);
+  }
+  h1, h2, h3, .serif { font-family: var(--serif); font-weight: 600; letter-spacing: 0.01em; }
+  button { font: inherit; color: inherit; background: none; border: none; cursor: pointer; text-align: left; }
+
+  /* ——— Header ——— */
+  .brand { display: flex; align-items: baseline; gap: 10px; margin-bottom: 4px; }
+  .brand h1 { font-size: 30px; color: var(--rose-soft); }
+  .brand .dot { color: var(--gold); font-size: 30px; font-family: var(--serif); }
+  .tagline { color: var(--muted); font-size: 14px; margin-bottom: 22px; }
+
+  /* ——— Cards ——— */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    padding: 18px;
+    margin-bottom: 14px;
+    width: 100%;
+    display: block;
+  }
+  button.card:active { background: var(--surface-hi); }
+  .card .kicker {
+    font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--gold); margin-bottom: 6px; font-weight: 600;
+  }
+  .card h2 { font-size: 20px; margin-bottom: 4px; }
+  .card .sub { color: var(--muted); font-size: 14px; }
+  .card .meta { color: var(--muted); font-size: 12px; margin-top: 10px; }
+  .done-chip { color: var(--good); font-size: 12px; font-weight: 600; }
+
+  /* ——— Lesson list ——— */
+  .lesson-row {
+    display: flex; align-items: center; gap: 14px;
+    padding: 15px 4px; border-bottom: 1px solid var(--line); width: 100%;
+  }
+  .lesson-row:last-child { border-bottom: none; }
+  .lesson-row .check {
+    width: 24px; height: 24px; border-radius: 50%; flex-shrink: 0;
+    border: 1.5px solid var(--muted); display: flex; align-items: center; justify-content: center;
+    font-size: 13px; color: var(--bg);
+  }
+  .lesson-row.is-done .check { background: var(--good); border-color: var(--good); }
+  .lesson-row .t { font-size: 16px; }
+  .lesson-row.is-done .t { color: var(--muted); }
+  .lesson-row .arrow { margin-left: auto; color: var(--muted); }
+
+  /* ——— Lesson view ——— */
+  .back-btn { color: var(--gold); font-size: 15px; font-weight: 600; padding: 6px 0 18px; display: inline-block; }
+  .lesson-title { font-size: 26px; color: var(--rose-soft); margin-bottom: 4px; }
+  .lesson-module { color: var(--muted); font-size: 13px; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 20px; }
+  .lesson-body p { margin-bottom: 16px; font-size: 16.5px; color: var(--text); }
+  .practice {
+    background: var(--surface); border-left: 3px solid var(--gold);
+    border-radius: 0 14px 14px 0; padding: 16px 18px; margin: 22px 0;
+  }
+  .practice .label { font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--gold); font-weight: 700; margin-bottom: 6px; }
+  .practice p { font-size: 15.5px; color: var(--text); }
+  .complete-btn {
+    width: 100%; text-align: center; padding: 15px; border-radius: 14px;
+    background: var(--rose); color: #2a151a; font-weight: 700; font-size: 16px; margin-top: 8px;
+  }
+  .complete-btn.is-done { background: var(--surface-hi); color: var(--good); }
+
+  /* ——— Guide ——— */
+  .principle {
+    display: flex; gap: 14px; align-items: flex-start;
+    background: var(--surface); border: 1px solid var(--line);
+    border-radius: 16px; padding: 16px; margin-bottom: 12px;
+  }
+  .principle .num {
+    font-family: var(--serif); font-size: 22px; color: var(--gold);
+    min-width: 30px; line-height: 1.3;
+  }
+  .principle h3 { font-size: 16px; margin-bottom: 3px; }
+  .principle p { font-size: 14px; color: var(--muted); }
+  .section-h { font-size: 20px; color: var(--rose-soft); margin: 26px 0 14px; }
+  .flow-step { display: flex; gap: 12px; padding: 12px 4px; border-bottom: 1px solid var(--line); }
+  .flow-step:last-child { border: none; }
+  .flow-step .fnum { color: var(--gold); font-family: var(--serif); font-size: 17px; min-width: 22px; }
+  .flow-step .ft { font-size: 15px; }
+  .flow-step .fd { font-size: 13.5px; color: var(--muted); }
+
+  /* ——— Reflect ——— */
+  .prompt-card { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 16px; margin-bottom: 14px; }
+  .prompt-card .p-label { font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--gold); font-weight: 700; margin-bottom: 8px; }
+  .prompt-card .p-text { font-size: 15px; color: var(--text); font-style: italic; font-family: var(--serif); }
+  textarea {
+    width: 100%; min-height: 120px; background: var(--surface); color: var(--text);
+    border: 1px solid var(--line); border-radius: 14px; padding: 14px;
+    font: inherit; font-size: 15px; resize: vertical; margin-bottom: 10px;
+  }
+  textarea:focus { outline: none; border-color: var(--rose); }
+  .save-btn { background: var(--gold); color: #2a1d0d; font-weight: 700; padding: 12px 22px; border-radius: 12px; font-size: 15px; }
+  .entry { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; margin-bottom: 10px; }
+  .entry .e-date { font-size: 12px; color: var(--muted); margin-bottom: 6px; }
+  .entry .e-text { font-size: 14.5px; white-space: pre-wrap; }
+  .entry .e-del { color: var(--muted); font-size: 12px; margin-top: 8px; }
+  .privacy-note { font-size: 12.5px; color: var(--muted); margin: 4px 2px 18px; }
+
+  /* ——— Progress ——— */
+  .stat-row { display: flex; gap: 12px; margin-bottom: 14px; }
+  .stat {
+    flex: 1; background: var(--surface); border: 1px solid var(--line);
+    border-radius: 16px; padding: 16px; text-align: center;
+  }
+  .stat .v { font-family: var(--serif); font-size: 32px; color: var(--gold); }
+  .stat .l { font-size: 12px; color: var(--muted); letter-spacing: 0.06em; text-transform: uppercase; }
+  .bar-wrap { background: var(--surface); border-radius: 99px; height: 10px; overflow: hidden; margin: 8px 0 4px; border: 1px solid var(--line); }
+  .bar { height: 100%; background: linear-gradient(90deg, var(--rose), var(--gold)); border-radius: 99px; transition: width 0.4s ease; }
+  .module-progress { margin-bottom: 18px; }
+  .module-progress .mp-head { display: flex; justify-content: space-between; font-size: 14px; }
+  .module-progress .mp-head .n { color: var(--muted); }
+
+  /* ——— Tab bar ——— */
+  nav {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    background: rgba(23, 16, 25, 0.92);
+    -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px);
+    border-top: 1px solid var(--line);
+    display: flex; justify-content: space-around;
+    padding: 10px 8px calc(env(safe-area-inset-bottom) + 10px);
+    max-width: 560px; margin: 0 auto;
+  }
+  nav button {
+    flex: 1; text-align: center; color: var(--muted);
+    font-size: 11px; font-weight: 600; letter-spacing: 0.04em;
+    display: flex; flex-direction: column; align-items: center; gap: 3px;
+  }
+  nav button .ico { font-size: 21px; line-height: 1; }
+  nav button.active { color: var(--rose-soft); }
+  .fade-in { animation: fade 0.25s ease; }
+  @keyframes fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<nav id="nav"></nav>
+
+<script>
+/* ————————————————— Content —————————————————
+   Original educational writing inspired by the core ideas
+   popularized by Ian Kerner's "She Comes First": a partner's
+   pleasure-first philosophy of lovemaking. */
+
+const MODULES = [
+  {
+    id: "philosophy",
+    number: "I",
+    title: "The Philosophy",
+    subtitle: "Why she comes first",
+    lessons: [
+      {
+        id: "p1",
+        title: "The pleasure gap is real",
+        body: [
+          "In heterosexual encounters, men climax far more consistently than women — researchers call this the orgasm gap. It isn't biology's fault. In situations where women receive focused, unhurried clitoral stimulation, that gap nearly disappears.",
+          "The takeaway is liberating: her satisfaction is mostly a matter of attention, knowledge, and patience — three things entirely within your control. You don't need to be lucky or gifted. You need to be informed and generous.",
+          "'She comes first' is both a value and a strategy. As a value, it says her pleasure is a priority, not a warm-up act. As a strategy, it works with her body's natural arousal arc instead of against it — and it takes performance pressure off you, too.",
+        ],
+        practice: "Shift your definition of a great encounter from 'we both finished' to 'she felt fully attended to.' Hold that frame for the rest of this course.",
+      },
+      {
+        id: "p2",
+        title: "Retire the word 'foreplay'",
+        body: [
+          "The word 'foreplay' smuggles in a bad idea: that everything before intercourse is an appetizer, and intercourse is the meal. For most women, it's closer to the reverse — the touching, kissing, and especially oral attention that gets labeled 'foreplay' is where the majority of her pleasure actually lives.",
+          "Only a minority of women reliably climax from intercourse alone. The clitoris, not the vagina, is the primary engine of female orgasm, and intercourse often stimulates it only indirectly.",
+          "So flip the script. Treat what you called foreplay as the main event — the core of the encounter — and intercourse as one possible (optional) chapter, not the destination everything races toward.",
+        ],
+        practice: "Next intimate encounter, privately commit to this: intercourse doesn't begin until after she's had at least one orgasm — or until she pulls you in because she genuinely wants it, not because you drifted there on autopilot.",
+      },
+      {
+        id: "p3",
+        title: "Patience is the technique",
+        body: [
+          "On average, a woman needs significantly more time to reach full arousal and orgasm than a man — often fifteen to twenty minutes of consistent stimulation, sometimes more. Most encounters don't allot her a fraction of that.",
+          "Rushing communicates something corrosive: that her pleasure is a task to complete. Unhurried attention communicates the opposite — that you're there because being there is the point.",
+          "Every technique in this app is downstream of this one principle. If you take away nothing else: slow down, then slow down again. Time is the most erotic gift you can give.",
+        ],
+        practice: "This week, double the time you'd normally spend on non-intercourse intimacy. Don't announce it. Just notice how her body responds differently when nothing feels rushed.",
+      },
+      {
+        id: "p4",
+        title: "Enthusiasm beats technique",
+        body: [
+          "Ask women what separates a great lover from a mediocre one and one answer dominates: genuine enthusiasm. Reluctant, dutiful attention — however technically correct — reads instantly and kills arousal.",
+          "Many women carry anxiety about being 'taken care of': worrying they take too long, that you're bored, that their body is somehow too much. Visible, sincere enjoyment on your part dissolves that anxiety better than any reassurance.",
+          "Enthusiasm isn't performance. It's a mindset: her pleasure genuinely is your pleasure. When that's true and she can feel it's true, she can finally relax — and relaxation is the soil orgasm grows in.",
+        ],
+        practice: "Tell her — outside the bedroom, unprompted — one specific thing you love about pleasuring her. Not fishing for anything. Just planting the knowledge that you want to be there.",
+      },
+    ],
+  },
+  {
+    id: "anatomy",
+    number: "II",
+    title: "Know the Territory",
+    subtitle: "An honest anatomy lesson",
+    lessons: [
+      {
+        id: "a1",
+        title: "The clitoris is an iceberg",
+        body: [
+          "The visible part of the clitoris — the small head (glans) beneath its hood — is just the tip of a much larger internal structure. Two arms and two bulbs of erectile tissue extend inside the body, wrapping around the vaginal canal.",
+          "The glans alone carries roughly eight thousand nerve endings — about double the count in the head of a penis — packed into an area the size of a pea. It exists for exactly one purpose: pleasure.",
+          "This explains two things at once. Why direct clitoral stimulation is so powerful, and why it can also be too intense if you go straight at it before she's aroused. The whole region engorges as she warms up — arousal literally changes the map.",
+        ],
+        practice: "Spend ten minutes with a reputable anatomy resource (the Wikipedia article on the clitoris is genuinely good). Being able to picture the internal structure will change how you touch.",
+      },
+      {
+        id: "a2",
+        title: "Landmarks worth knowing",
+        body: [
+          "The clitoral head sits at the top of the vulva where the inner lips meet, covered by a small fold of skin — the hood. The hood is your friend: stimulating through it or alongside it softens intensity in the early stages.",
+          "The inner lips (labia minora) are richly sensitive and directly connected to the clitoral structure — tracing, kissing, and gently tugging them is stimulation, not a detour. The vaginal opening's lower edge and the perineum below it respond to pressure and warmth.",
+          "Inside, the front wall of the vagina (an inch or two in, toward her belly) is where the internal clitoral tissue can be reached — the region often called the G-spot. It responds to firm, rhythmic pressure rather than light touch, and mostly after she's already quite aroused.",
+        ],
+        practice: "Next time, narrate silently to yourself where you actually are — hood, head, inner lips, opening. Precision of attention comes before precision of touch.",
+      },
+      {
+        id: "a3",
+        title: "Every woman is a different country",
+        body: [
+          "Anatomy varies enormously — the size and sensitivity of the clitoral head, how much the hood covers, which side she prefers, whether direct contact is heavenly or overwhelming. What thrilled a previous partner may do nothing for this one.",
+          "Preferences also shift within a single encounter. A touch that's too intense at minute two can be exactly right at minute twelve. The map is live, not static.",
+          "So hold your knowledge lightly. Anatomy tells you where to explore; only her responses tell you what's working. Curiosity outranks confidence.",
+        ],
+        practice: "Adopt the explorer's question as a habit of mind: not 'am I doing the technique right?' but 'what is her body telling me right now?'",
+      },
+    ],
+  },
+  {
+    id: "arousal",
+    number: "III",
+    title: "The Arousal Arc",
+    subtitle: "Working with her body's timeline",
+    lessons: [
+      {
+        id: "r1",
+        title: "The stages of her arousal",
+        body: [
+          "Female arousal moves through recognizable stages: desire (mental interest), excitement (blood flow, swelling, lubrication), plateau (sustained high arousal where everything is engorged and sensitive), orgasm, and resolution.",
+          "The most common male error is mistaking early excitement for readiness. Lubrication begins early; full engorgement — when the clitoris and inner lips are swollen, darkened, and hungry for firmer touch — takes much longer.",
+          "Your job is to be a good steward of the arc: build excitement gradually, extend the plateau generously, and never yank her backward by suddenly changing or stopping what's working.",
+        ],
+        practice: "Learn to spot the plateau: deeper breathing, flushed chest, tensing thighs, hips seeking your touch, sounds becoming involuntary. Until you see it, keep building — don't escalate intensity prematurely.",
+      },
+      {
+        id: "r2",
+        title: "Arousal begins hours earlier",
+        body: [
+          "For most women, desire is heavily contextual. Stress, resentment, feeling unattractive, or sensing that affection always has an agenda — all of it closes the door before you reach the bedroom.",
+          "Non-sexual generosity is genuinely erotic groundwork: real attention in conversation, affection that leads nowhere, handling your share of life's logistics without being asked. This isn't a transaction; it's the context her desire lives in.",
+          "Anticipation is the other half. A slow kiss in the morning, a message that says tonight is about her — desire builds beautifully when it has hours to simmer.",
+        ],
+        practice: "Pick one day this week: give her three moments of agenda-free affection, then one unmistakable signal that you want her. Let at least a few hours pass between the signal and the encounter.",
+      },
+      {
+        id: "r3",
+        title: "The golden rule of rhythm",
+        body: [
+          "Here is possibly the single most valuable technical sentence in this entire app: when something is clearly working, do not change it. Not faster, not harder, not a fancier variation. The same thing, at the same pace, with the same pressure.",
+          "Female orgasm typically builds through consistent, repetitive stimulation. Men often escalate as excitement rises — speeding up the way they'd want — and inadvertently reset her climb every time. Her rising arousal is your cue to stay steady, not to accelerate.",
+          "Variety belongs to the buildup. Consistency belongs to the finish. Learn where the boundary is (her breathing and hips will tell you) and switch modes deliberately.",
+        ],
+        practice: "Next time she starts responding strongly to something, silently commit to sixty more seconds of exactly that — same rhythm, same pressure. Notice what steadiness does.",
+      },
+      {
+        id: "r4",
+        title: "Teasing is engineering",
+        body: [
+          "Approach and retreat is the fundamental buildup pattern. Move toward the most sensitive spots, then drift away before fully arriving. Each pass builds engorgement and wanting.",
+          "Work in slow circles inward: thighs, hips, lower belly, outer lips, inner lips — with the clitoral head as a destination you keep almost reaching. By the time you arrive, she should be moving toward your mouth or hand, not waiting politely.",
+          "The test of good teasing is her hips. If they're chasing you, the buildup is working. If she's lying still and patient, you've been too predictable or too distant — vary the pattern and come closer.",
+        ],
+        practice: "Practice one full approach-retreat cycle lasting five minutes before any direct clitoral contact. It will feel absurdly long to you. It won't to her.",
+      },
+    ],
+  },
+  {
+    id: "technique",
+    number: "IV",
+    title: "Going Down, Well",
+    subtitle: "The craft of oral pleasure",
+    lessons: [
+      {
+        id: "t1",
+        title: "Set the scene for both of you",
+        body: [
+          "Comfort is a prerequisite, not a luxury. If your neck aches at minute four, your attention will be on your neck. Get a pillow under her hips — it tilts her pelvis up, opens everything to you, and saves your posture. Settle in like you're staying a while, because you are.",
+          "Her comfort is mental as much as physical. Many women struggle to receive oral sex because they're anxious about taking too long or how they taste. A sincere word before you begin — that you love this, that there's no clock — is worth twenty minutes of technique.",
+          "Warm the room, dim the light if she prefers it, and put your phone far away. You're communicating with everything you do: this is the event, not the opening act.",
+        ],
+        practice: "The hip pillow is the single highest-value logistical upgrade in this app. Try it once and you'll never go back.",
+      },
+      {
+        id: "t2",
+        title: "Start wide, arrive slowly",
+        body: [
+          "Begin nowhere near the center. Kiss her mouth, neck, breasts; take real time at the inner thighs and the crease of her hips. Kiss over her underwear before it comes off. Every minute of approach multiplies what comes later.",
+          "When you arrive at the vulva, still don't go for the clitoral head. Use broad, flat, soft tongue strokes over the whole area — think of the wide surface of the tongue, not the tip. Long slow licks from the vaginal opening upward, ending just beside or below the head.",
+          "Early on, less pointed is better: a soft, relaxed tongue over a large area lets her arousal build without any single spot getting overwhelmed. Save the precise tip-of-tongue work for when she's fully engorged and pressing into you.",
+        ],
+        practice: "Rule of thumb for your next encounter: broad and soft for the first several minutes, and don't touch the clitoral head directly until her hips ask for it.",
+      },
+      {
+        id: "t3",
+        title: "The core stroke",
+        body: [
+          "Once she's fully aroused, most women's path to orgasm is a steady, rhythmic stroke on or around the clitoral head. A reliable default: a consistent up-down or circular motion with the soft front of your tongue, at a calm tempo — roughly one stroke per second, slower than you think.",
+          "Pointed-tongue flicking — the move pornography loves — is usually too sharp and too fast. Softness and repetition beat speed and intricacy. If she likes more intensity, add gentle suction around the head (lips sealed softly around it, tongue still moving) rather than more force.",
+          "Then apply the golden rule: when her breathing deepens and her hips lock into your rhythm, you have found it. Change nothing. Your only job now is endurance and consistency — keep the exact stroke going through her climb, however long it takes.",
+        ],
+        practice: "Find one sustainable stroke you could comfortably continue for ten minutes. Sustainable beats spectacular — a stroke you can't maintain is a stroke that will fail her at the worst moment.",
+      },
+      {
+        id: "t4",
+        title: "Add your hands",
+        body: [
+          "Your mouth doesn't work alone. Hands on her hips, thighs, breasts, or holding her hand keep the experience full-body and connected. Many women find a firm grip on the hips deeply grounding — it says you're anchored there.",
+          "Once she's very aroused, one or two fingers inside — palm up, curling gently toward her belly with slow, firm 'come here' pressure against the front wall — pairs internal stimulation with your tongue's external rhythm. Enter slowly, only when she's wet and wanting, and keep your tongue's rhythm unchanged as you do.",
+          "You can also use a thumb or fingers to gently retract the hood upward (via light pressure on the mound above it) exposing the head for more direct contact — powerful, but only near the peak of arousal. If she flinches, ease off; if she presses in, you've timed it right.",
+        ],
+        practice: "Add one element at a time, never two. Tongue rhythm plus new fingers, or tongue rhythm plus hood retraction — introduce a single variable and read the response before adding anything else.",
+      },
+      {
+        id: "t5",
+        title: "Through the finish, and after",
+        body: [
+          "As she crests into orgasm, the cardinal rule intensifies: do not stop, do not speed up, do not get excited and improvise. Maintain the exact stimulation through her orgasm until her body clearly signals it's done — usually by her pulling back or going still.",
+          "Immediately after climax, the clitoral head is often exquisitely oversensitive. Lift to broad, soft, slow contact or simply rest your mouth against her, warm and still. Some women want a second climb within a minute or two; gentle, patient resumption will tell you. Others are done — respect it instantly.",
+          "Don't leap up to 'claim your turn.' Stay close, keep your hands on her, let her land. What happens in the two minutes after her orgasm shapes how safe she feels coming back for the next one.",
+        ],
+        practice: "After her next orgasm, give her sixty seconds of pure stillness and closeness before anything else happens. Watch what it does to the mood between you.",
+      },
+      {
+        id: "t6",
+        title: "If intercourse follows",
+        body: [
+          "The pleasure-first sequence has a beautiful side effect: intercourse after her orgasm happens with her fully engorged, deeply relaxed, and often far more orgasmic than she'd otherwise be. You've done the work; now everything is warmer, wetter, and more responsive.",
+          "During intercourse, her clitoris still wants attention — angles that grind against her (like coital alignment: riding high so your body presses her clitoris with a rocking rather than thrusting motion), her own or your fingers, or positions that leave the clitoris reachable.",
+          "And release the scoreboard. Some of the best encounters end with her orgasm and nothing else, or with yours arriving some other way. When intercourse becomes one option among many rather than the mandatory finale, both of you get freer.",
+        ],
+        practice: "Try one full encounter where you deliberately keep a hand or her hand on her clitoris during intercourse the whole time. Notice the difference in her responsiveness.",
+      },
+    ],
+  },
+  {
+    id: "communication",
+    number: "V",
+    title: "Communication",
+    subtitle: "The skill that unlocks all others",
+    lessons: [
+      {
+        id: "c1",
+        title: "Talk outside the bedroom",
+        body: [
+          "The best feedback conversations happen with clothes on — over coffee, on a walk — when nobody's ego is on the line mid-act. Ask open, generous questions: 'What's something you'd love more of?' 'Is there anything I do that you'd tweak?'",
+          "Frame it as appetite, not evaluation: you're asking because you want more of her, not because you're auditing your performance. And when she tells you something, receive it as gold, never as criticism — defensiveness in that moment can close the channel for years.",
+          "Share your own answers too. Vulnerability is reciprocal; a one-way interview feels like a test.",
+        ],
+        practice: "This week, ask her one open question about what she'd love more of. Just listen, thank her, and act on it later without announcing that you're acting on it.",
+      },
+      {
+        id: "c2",
+        title: "Read and ask in the moment",
+        body: [
+          "Her body is broadcasting constantly: breath rate, hip movement, thigh tension, hands (pulling you closer or subtly redirecting), sounds shifting from voluntary to involuntary. Involuntary is the tell — genuine arousal makes noise she isn't choosing to make.",
+          "When you need words, use binary or either/or questions that don't force her to compose sentences: 'Softer or firmer?' 'Right there?' A moan and a hip press is a complete answer. Long open questions mid-act pull her out of her body.",
+          "Beware the polite plateau: stillness plus silence often means what you're doing isn't working and she doesn't want to hurt your feelings. Treat quiet passivity as information, not as contentment — change something and watch what happens.",
+        ],
+        practice: "Next encounter, ask exactly one either/or question at a useful moment — and visibly, immediately act on the answer. Acting on feedback teaches her that giving it is worth it.",
+      },
+      {
+        id: "c3",
+        title: "The mistakes that undo everything",
+        body: [
+          "The classics, so you can retire them: rushing to the clitoris before arousal (it feels invasive, not exciting). Changing technique the moment she starts responding (resets her climb). Speeding up as she gets close (same). Treating oral sex as a brief stop on the way to intercourse (she can feel the impatience in your tongue).",
+          "Also: taking a long climb personally. If she takes twenty-five minutes, that's her body, not your failure — and any sigh or flagging enthusiasm from you adds anxiety that makes it longer. Settle in; time pressure is the enemy.",
+          "Finally, don't chase her orgasm so hard that it becomes a demand. 'Did you finish?' asked with needy eyes makes her orgasm about you. Create the conditions, stay devoted and unhurried, and let it arrive — or not — without a verdict.",
+        ],
+        practice: "Pick your personal worst habit from this list — you know which one — and make eliminating it your single focus for the next two encounters.",
+      },
+      {
+        id: "c4",
+        title: "Consent and care, always",
+        body: [
+          "Everything in this app assumes an enthusiastic, ongoing yes. Enthusiasm is the standard — not absence of objection. Check in when trying anything new, and treat any hesitation as a full stop, not a negotiation.",
+          "Desire discrepancies are normal in every relationship. A 'not tonight' received warmly — with zero sulking — builds more long-term desire than any technique in this app. Pressure is the anti-aphrodisiac.",
+          "The deepest version of 'she comes first' isn't about orgasm at all. It's that her experience — her comfort, her safety, her actual wants — genuinely leads. Get that right and the rest of this app is just details.",
+        ],
+        practice: "Practice receiving a 'no' or 'not tonight' with genuine warmth: 'Come here, let's just be close then.' Mean it. This is the most attractive skill in the entire course.",
+      },
+    ],
+  },
+];
+
+const PRINCIPLES = [
+  { t: "Her pleasure is the event", d: "Not the appetizer. What you called foreplay is the main course." },
+  { t: "The clitoris is the center", d: "Most women don't climax from intercourse alone. Plan accordingly." },
+  { t: "Slow down, then slow down again", d: "Fifteen to twenty minutes of buildup is normal, not excessive." },
+  { t: "Broad and soft before pointed and precise", d: "Flat tongue, whole vulva, low intensity — until she's fully engorged." },
+  { t: "When it's working, change nothing", d: "Same stroke, same pace, same pressure. Her arousal is not a cue to accelerate." },
+  { t: "Don't stop through her orgasm", d: "Maintain the exact stimulation until her body clearly releases you." },
+  { t: "Enthusiasm is the master technique", d: "Genuine, visible enjoyment dissolves her anxiety better than any move." },
+  { t: "Read hips and breath, not just sounds", d: "Involuntary responses are the truth. Polite stillness means change something." },
+  { t: "One question, well timed", d: "'Softer or firmer?' beats an interview. Then act on the answer instantly." },
+  { t: "Enthusiastic consent, zero pressure", d: "A 'no' received warmly builds more desire than any technique ever will." },
+];
+
+const FLOW = [
+  { t: "Set the scene", d: "Pillow under hips, phone away, no clock. A word of genuine appetite." },
+  { t: "Whole-body beginning", d: "Mouth, neck, breasts, thighs. Nothing central for the first while." },
+  { t: "Approach and retreat", d: "Circle inward, almost arrive, drift back. Make her hips chase you." },
+  { t: "Broad and soft", d: "Flat-tongue strokes over the whole vulva. Slow. No direct head contact yet." },
+  { t: "Find the core stroke", d: "Steady rhythm on/around the clitoral head, about one stroke per second." },
+  { t: "Lock in — golden rule", d: "She's responding? Change nothing. Add hands only one element at a time." },
+  { t: "Through the finish", d: "Exact same stimulation through her orgasm until her body releases you." },
+  { t: "Land together", d: "Soft, still, close. Sixty seconds of nothing before whatever comes next." },
+];
+
+const PROMPTS = [
+  "What did her body tell you last time that you almost missed?",
+  "Where did you feel the urge to speed up — and what would staying slow have looked like?",
+  "What's one thing she told you (in words or movement) that you've acted on?",
+  "Which lesson's idea felt most uncomfortable? That's usually the one to sit with.",
+  "What did you enjoy most about giving last time? Be specific.",
+  "If she described your last encounter to a friend, what do you hope she'd say?",
+  "What question have you been avoiding asking her?",
+];
+
+/* ————————————————— State ————————————————— */
+const store = {
+  get done() { try { return JSON.parse(localStorage.getItem("scf.done") || "[]"); } catch { return []; } },
+  set done(v) { localStorage.setItem("scf.done", JSON.stringify(v)); },
+  get entries() { try { return JSON.parse(localStorage.getItem("scf.entries") || "[]"); } catch { return []; } },
+  set entries(v) { localStorage.setItem("scf.entries", JSON.stringify(v)); },
+};
+
+let state = { tab: "learn", moduleId: null, lessonId: null };
+const $app = document.getElementById("app");
+const $nav = document.getElementById("nav");
+const esc = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+
+function setState(patch) { state = { ...state, ...patch }; render(); window.scrollTo(0, 0); }
+
+function toggleDone(id) {
+  const d = store.done;
+  store.done = d.includes(id) ? d.filter((x) => x !== id) : [...d, id];
+  render();
+}
+
+/* ————————————————— Views ————————————————— */
+function header() {
+  return `<div class="brand"><h1>First</h1><span class="dot">·</span></div>
+    <div class="tagline">A study in generous lovemaking — inspired by the principles of <em>She Comes First</em>.</div>`;
+}
+
+function viewLearn() {
+  const done = store.done;
+  if (state.lessonId) {
+    const mod = MODULES.find((m) => m.id === state.moduleId);
+    const lesson = mod.lessons.find((l) => l.id === state.lessonId);
+    const isDone = done.includes(lesson.id);
+    return `<div class="fade-in">
+      <button class="back-btn" onclick="setState({lessonId:null})">‹ ${esc(mod.title)}</button>
+      <div class="lesson-module">Module ${mod.number} · ${esc(mod.subtitle)}</div>
+      <h2 class="lesson-title">${esc(lesson.title)}</h2>
+      <div class="lesson-body">${lesson.body.map((p) => `<p>${esc(p)}</p>`).join("")}</div>
+      <div class="practice"><div class="label">Try this</div><p>${esc(lesson.practice)}</p></div>
+      <button class="complete-btn ${isDone ? "is-done" : ""}" onclick="toggleDone('${lesson.id}')">
+        ${isDone ? "✓ Completed — tap to undo" : "Mark as complete"}
+      </button>
+    </div>`;
+  }
+  if (state.moduleId) {
+    const mod = MODULES.find((m) => m.id === state.moduleId);
+    return `<div class="fade-in">
+      <button class="back-btn" onclick="setState({moduleId:null})">‹ All modules</button>
+      <div class="lesson-module">Module ${mod.number}</div>
+      <h2 class="lesson-title">${esc(mod.title)}</h2>
+      <div class="sub" style="color:var(--muted);margin-bottom:16px">${esc(mod.subtitle)}</div>
+      <div class="card" style="padding:6px 16px">
+        ${mod.lessons.map((l) => {
+          const isDone = done.includes(l.id);
+          return `<button class="lesson-row ${isDone ? "is-done" : ""}" onclick="setState({lessonId:'${l.id}'})">
+            <span class="check">${isDone ? "✓" : ""}</span><span class="t">${esc(l.title)}</span><span class="arrow">›</span>
+          </button>`;
+        }).join("")}
+      </div>
+    </div>`;
+  }
+  return `<div class="fade-in">${header()}
+    ${MODULES.map((m) => {
+      const total = m.lessons.length;
+      const n = m.lessons.filter((l) => done.includes(l.id)).length;
+      return `<button class="card" onclick="setState({moduleId:'${m.id}'})">
+        <div class="kicker">Module ${m.number}</div>
+        <h2>${esc(m.title)}</h2>
+        <div class="sub">${esc(m.subtitle)}</div>
+        <div class="meta">${n === total ? `<span class="done-chip">✓ Complete</span>` : `${n} of ${total} lessons`}</div>
+      </button>`;
+    }).join("")}
+  </div>`;
+}
+
+function viewGuide() {
+  return `<div class="fade-in">${header()}
+    <h2 class="section-h" style="margin-top:6px">The ten principles</h2>
+    ${PRINCIPLES.map((p, i) => `<div class="principle"><div class="num">${i + 1}</div>
+      <div><h3>${esc(p.t)}</h3><p>${esc(p.d)}</p></div></div>`).join("")}
+    <h2 class="section-h">Session flow</h2>
+    <div class="card" style="padding:8px 18px">
+      ${FLOW.map((f, i) => `<div class="flow-step"><div class="fnum">${i + 1}</div>
+        <div><div class="ft">${esc(f.t)}</div><div class="fd">${esc(f.d)}</div></div></div>`).join("")}
+    </div>
+  </div>`;
+}
+
+function viewReflect() {
+  const prompt = PROMPTS[new Date().getDate() % PROMPTS.length];
+  const entries = store.entries;
+  return `<div class="fade-in">${header()}
+    <div class="prompt-card"><div class="p-label">Today's reflection</div><div class="p-text">${esc(prompt)}</div></div>
+    <textarea id="entry-input" placeholder="Write privately — what did you notice, learn, or want to try?"></textarea>
+    <button class="save-btn" onclick="saveEntry()">Save reflection</button>
+    <p class="privacy-note" style="margin-top:14px">Everything you write stays on this device only. Nothing is uploaded anywhere.</p>
+    ${entries.length ? `<h2 class="section-h">Past reflections</h2>` : ""}
+    ${entries.map((e, i) => `<div class="entry"><div class="e-date">${esc(e.date)}</div>
+      <div class="e-text">${esc(e.text)}</div>
+      <button class="e-del" onclick="deleteEntry(${i})">Delete</button></div>`).join("")}
+  </div>`;
+}
+
+function saveEntry() {
+  const el = document.getElementById("entry-input");
+  const text = el.value.trim();
+  if (!text) return;
+  const date = new Date().toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" });
+  store.entries = [{ date, text }, ...store.entries];
+  render();
+}
+function deleteEntry(i) {
+  const e = store.entries; e.splice(i, 1); store.entries = e; render();
+}
+
+function viewProgress() {
+  const done = store.done;
+  const total = MODULES.reduce((s, m) => s + m.lessons.length, 0);
+  const n = MODULES.reduce((s, m) => s + m.lessons.filter((l) => done.includes(l.id)).length, 0);
+  const pct = total ? Math.round((n / total) * 100) : 0;
+  return `<div class="fade-in">${header()}
+    <div class="stat-row">
+      <div class="stat"><div class="v">${n}</div><div class="l">Lessons done</div></div>
+      <div class="stat"><div class="v">${pct}%</div><div class="l">Complete</div></div>
+      <div class="stat"><div class="v">${store.entries.length}</div><div class="l">Reflections</div></div>
+    </div>
+    <h2 class="section-h">By module</h2>
+    ${MODULES.map((m) => {
+      const mt = m.lessons.length;
+      const mn = m.lessons.filter((l) => done.includes(l.id)).length;
+      return `<div class="module-progress">
+        <div class="mp-head"><span>${m.number} · ${esc(m.title)}</span><span class="n">${mn}/${mt}</span></div>
+        <div class="bar-wrap"><div class="bar" style="width:${mt ? (mn / mt) * 100 : 0}%"></div></div>
+      </div>`;
+    }).join("")}
+    <div class="card" style="margin-top:20px">
+      <div class="kicker">Remember</div>
+      <p style="font-size:15px;color:var(--muted)">Progress here means nothing unless it shows up as patience, attention, and generosity with her. The lessons are the map — she is the territory.</p>
+    </div>
+  </div>`;
+}
+
+/* ————————————————— Render ————————————————— */
+const TABS = [
+  { id: "learn", label: "Learn", ico: "📖" },
+  { id: "guide", label: "Guide", ico: "✦" },
+  { id: "reflect", label: "Reflect", ico: "✎" },
+  { id: "progress", label: "Progress", ico: "◐" },
+];
+
+function render() {
+  const views = { learn: viewLearn, guide: viewGuide, reflect: viewReflect, progress: viewProgress };
+  $app.innerHTML = views[state.tab]();
+  $nav.innerHTML = TABS.map((t) => `<button class="${state.tab === t.id ? "active" : ""}"
+    onclick="setState({tab:'${t.id}',moduleId:null,lessonId:null})">
+    <span class="ico">${t.ico}</span>${t.label}</button>`).join("");
+}
+render();
+
+if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
+</script>
+</body>
+</html>
