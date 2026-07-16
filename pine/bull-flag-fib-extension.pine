@@ -1,0 +1,239 @@
+//@version=6
+indicator("Bull Flag — Trend-Based Fib Extension", shorttitle = "Bull Flag Fib",
+     overlay = true, max_lines_count = 500, max_labels_count = 500, max_boxes_count = 100)
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Bull-flag continuation setup, per John J. Murphy, "Technical Analysis of
+// the Financial Markets" (flags & pennants, continuation patterns):
+//   • Flagpole: a sharp, near-vertical advance, ideally on heavy volume.
+//   • Flag: a brief, drifting consolidation that slopes against the trend
+//     on shrinking volume, typically retracing only a modest part of the pole.
+//   • Measured move: the pattern "flies at half-mast" — the pole height is
+//     expected to repeat after the breakout.
+//
+// This script:
+//   1. Detects the flagpole (impulse leg measured in ATR multiples).
+//   2. Identifies the FIRST corrective swing inside the flag:
+//        A = flag high (pole top), B = first corrective pivot low,
+//        C = first reaction pivot high after B (lower high).
+//   3. Projects the corrective swing DOWNWARD with a trend-based Fibonacci
+//      extension (TradingView's 3-point tool):  level(r) = C − r·(A − B).
+//        • BUY zone  near the 1.0   extension (AB = CD flag low)
+//        • STOP      below the 1.618 extension
+//   4. Targets the breakout above the pole height, approximated by the
+//      −0.236 Fibonacci extension of the pole:
+//        target = A + 0.236 · (A − pole low).
+// ═══════════════════════════════════════════════════════════════════════════
+
+// ── Inputs ─────────────────────────────────────────────────────────────────
+grpPole      = "Flagpole detection"
+pivLen       = input.int(3,     "Pivot length (bars left/right)",              minval = 1,   group = grpPole)
+atrLen       = input.int(14,    "ATR length",                                  minval = 1,   group = grpPole)
+poleMinAtr   = input.float(3.5, "Min pole height (ATR multiples)",             minval = 0.5, step = 0.5, group = grpPole)
+poleMaxBars  = input.int(30,    "Max pole duration (bars)",                    minval = 3,   group = grpPole)
+
+grpFlag      = "Flag validation"
+maxRetrace   = input.float(0.5, "Max pole retracement by first low (B)",       minval = 0.1, maxval = 1.0, step = 0.05, group = grpFlag)
+flagMaxBars  = input.int(40,    "Max flag duration (bars)",                    minval = 5,   group = grpFlag)
+useVolFilter = input.bool(true, "Require flag volume < pole volume (Murphy)",  group = grpFlag)
+
+grpFib       = "Trend-based fib extension of corrective swing (A→B→C)"
+entryRatio   = input.float(1.0,   "Entry extension",                           step = 0.001, group = grpFib)
+stopRatio    = input.float(1.618, "Stop extension",                            step = 0.001, group = grpFib)
+entryTolAtr  = input.float(0.25,  "Entry touch tolerance (ATR)",               minval = 0.0, step = 0.05, group = grpFib)
+
+grpTgt       = "Target"
+targetRatio  = input.float(-0.236, "Pole fib level for target (−0.236 = above pole high)", step = 0.001, group = grpTgt)
+
+grpStyle     = "Style"
+showZigzag   = input.bool(true, "Draw pole and A-B-C swing lines",             group = grpStyle)
+colEntry     = input.color(color.new(color.green, 0),  "Entry",               group = grpStyle)
+colStop      = input.color(color.new(color.red, 0),    "Stop",                group = grpStyle)
+colTarget    = input.color(color.new(color.teal, 0),   "Target",              group = grpStyle)
+colFlag      = input.color(color.new(color.gray, 30),  "Flag high / swings",  group = grpStyle)
+
+max_bars_back(volume, 500)
+
+// ── State machine ──────────────────────────────────────────────────────────
+int SCAN   = 0   // looking for a flagpole
+int WAIT_B = 1   // pole found (A fixed), waiting for first corrective low
+int WAIT_C = 2   // B fixed, waiting for reaction high C
+int ARMED  = 3   // levels projected, waiting for a touch of the entry zone
+int LONG   = 4   // hypothetical position open, tracking stop / target
+
+var int   state      = SCAN
+var float lastPl     = na   // rolling pivot low (pole base candidate)
+var int   lastPlBar  = na
+var float poleLow    = na
+var int   poleLowBar = na
+var float aHigh      = na   // A: flag high (pole top)
+var int   aBar       = na
+var float bLow       = na   // B: first corrective low
+var int   bBar       = na
+var float cHigh      = na   // C: reaction high
+var int   cBar       = na
+var float entryLvl   = na
+var float stopLvl    = na
+var float targetLvl  = na
+
+var line entryLn  = na
+var line stopLn   = na
+var line targetLn = na
+var line flagLn   = na
+
+atr   = ta.atr(atrLen)
+ph    = ta.pivothigh(high, pivLen, pivLen)
+pl    = ta.pivotlow(low, pivLen, pivLen)
+phOk  = not na(ph)
+plOk  = not na(pl)
+pivBar = bar_index - pivLen
+
+bool setupArmed = false
+bool buySignal  = false
+bool stopHit    = false
+bool targetHit  = false
+
+// average volume over an inclusive bar-index range (small, bounded loops)
+avgVol(int fromBar, int toBar) =>
+    float s = 0.0
+    int   n = 0
+    if toBar >= fromBar
+        for off = bar_index - toBar to bar_index - fromBar
+            if off >= 0
+                s += volume[off]
+                n += 1
+    n > 0 ? s / n : na
+
+extendActiveLines() =>
+    if not na(entryLn)
+        line.set_x2(entryLn, bar_index)
+        line.set_x2(stopLn, bar_index)
+        line.set_x2(targetLn, bar_index)
+        line.set_x2(flagLn, bar_index)
+
+// ── SCAN: track pivot lows, detect the pole on a confirmed pivot high ─────
+if state == SCAN
+    if plOk
+        lastPl    := pl
+        lastPlBar := pivBar
+    if phOk and not na(lastPl)
+        poleHeight = ph - lastPl
+        barsUp     = pivBar - lastPlBar
+        if poleHeight >= poleMinAtr * atr and barsUp >= 2 and barsUp <= poleMaxBars
+            poleLow    := lastPl
+            poleLowBar := lastPlBar
+            aHigh      := ph
+            aBar       := pivBar
+            state      := WAIT_B
+
+// ── WAIT_B: first corrective pivot low inside the flag ────────────────────
+else if state == WAIT_B
+    if high > aHigh
+        // trend resumed before any correction — no flag; rescan from same base
+        state := SCAN
+    else if bar_index - aBar > flagMaxBars
+        state  := SCAN
+        lastPl := na
+    else if plOk and pivBar > aBar
+        retr = (aHigh - pl) / (aHigh - poleLow)
+        if pl < aHigh and pl > poleLow and retr <= maxRetrace
+            bLow  := pl
+            bBar  := pivBar
+            state := WAIT_C
+        else
+            state     := SCAN
+            lastPl    := pl
+            lastPlBar := pivBar
+
+// ── WAIT_C: reaction high (lower high) completes the A→B→C structure ──────
+else if state == WAIT_C
+    if close > aHigh
+        // broke out before a tradeable pullback structure formed
+        state  := SCAN
+        lastPl := na
+    else if close < bLow - (aHigh - bLow) or bar_index - aBar > flagMaxBars
+        // collapsed a full swing below B (or stalled too long) — not a flag
+        state  := SCAN
+        lastPl := na
+    else if phOk and pivBar > bBar and ph < aHigh and ph > bLow
+        swing = aHigh - bLow
+        eLvl  = ph - entryRatio  * swing        // 1.0   trend-based fib extension
+        sLvl  = ph - stopRatio   * swing        // 1.618 trend-based fib extension
+        tLvl  = aHigh - targetRatio * (aHigh - poleLow)   // −0.236 fib of the pole
+
+        volOk = true
+        if useVolFilter
+            pv = avgVol(poleLowBar, aBar)
+            fv = avgVol(aBar + 1, bar_index)
+            volOk := na(pv) or na(fv) ? true : fv < pv
+
+        if volOk and sLvl > poleLow - atr
+            cHigh     := ph
+            cBar      := pivBar
+            entryLvl  := eLvl
+            stopLvl   := sLvl
+            targetLvl := tLvl
+            state     := ARMED
+            setupArmed := true
+
+            if showZigzag
+                line.new(poleLowBar, poleLow, aBar, aHigh, color = colFlag, width = 2)
+                line.new(aBar, aHigh, bBar, bLow, color = colFlag, style = line.style_dashed)
+                line.new(bBar, bLow, cBar, cHigh, color = colFlag, style = line.style_dashed)
+                label.new(aBar, aHigh, "A", style = label.style_label_down, color = color.new(colFlag, 60), textcolor = chart.fg_color, size = size.small)
+                label.new(bBar, bLow, "B", style = label.style_label_up, color = color.new(colFlag, 60), textcolor = chart.fg_color, size = size.small)
+                label.new(cBar, cHigh, "C", style = label.style_label_down, color = color.new(colFlag, 60), textcolor = chart.fg_color, size = size.small)
+
+            flagLn   := line.new(aBar, aHigh, bar_index, aHigh, color = colFlag, style = line.style_dotted)
+            entryLn  := line.new(cBar, eLvl, bar_index, eLvl, color = colEntry, width = 2)
+            stopLn   := line.new(cBar, sLvl, bar_index, sLvl, color = colStop, width = 2)
+            targetLn := line.new(cBar, tLvl, bar_index, tLvl, color = colTarget, width = 2)
+            label.new(bar_index, eLvl, "Buy zone (" + str.tostring(entryRatio) + " ext): " + str.tostring(eLvl, format.mintick), style = label.style_label_left, color = color.new(colEntry, 80), textcolor = colEntry, size = size.small)
+            label.new(bar_index, sLvl, "Stop (< " + str.tostring(stopRatio) + " ext): " + str.tostring(sLvl, format.mintick), style = label.style_label_left, color = color.new(colStop, 80), textcolor = colStop, size = size.small)
+            label.new(bar_index, tLvl, "Target (" + str.tostring(targetRatio) + " pole ext): " + str.tostring(tLvl, format.mintick), style = label.style_label_left, color = color.new(colTarget, 80), textcolor = colTarget, size = size.small)
+        else
+            state  := SCAN
+            lastPl := na
+
+// ── ARMED: wait for price to tag the 1.0-extension buy zone ───────────────
+else if state == ARMED
+    extendActiveLines()
+    if close > aHigh
+        label.new(bar_index, high, "Breakout — no fill", style = label.style_label_down, color = color.new(colFlag, 60), textcolor = chart.fg_color, size = size.small)
+        state  := SCAN
+        lastPl := na
+    else if close < stopLvl
+        label.new(bar_index, low, "Setup invalidated", style = label.style_label_up, color = color.new(colStop, 60), textcolor = colStop, size = size.small)
+        state  := SCAN
+        lastPl := na
+    else if bar_index - cBar > flagMaxBars
+        state  := SCAN
+        lastPl := na
+    else if low <= entryLvl + entryTolAtr * atr
+        buySignal := true
+        state     := LONG
+        label.new(bar_index, low, "BUY " + str.tostring(entryLvl, format.mintick), style = label.style_label_up, color = colEntry, textcolor = color.white)
+
+// ── LONG: manage the hypothetical position ─────────────────────────────────
+else if state == LONG
+    extendActiveLines()
+    if close < stopLvl
+        stopHit := true
+        label.new(bar_index, low, "STOPPED", style = label.style_label_up, color = colStop, textcolor = color.white)
+        state  := SCAN
+        lastPl := na
+    else if high >= targetLvl
+        targetHit := true
+        label.new(bar_index, high, "TARGET " + str.tostring(targetLvl, format.mintick), style = label.style_label_down, color = colTarget, textcolor = color.white)
+        state  := SCAN
+        lastPl := na
+
+// ── Plots & alerts ─────────────────────────────────────────────────────────
+plotshape(buySignal, "Buy", shape.triangleup, location.belowbar, colEntry, size = size.small)
+plotshape(stopHit,   "Stop hit", shape.xcross, location.belowbar, colStop, size = size.tiny)
+plotshape(targetHit, "Target hit", shape.flag, location.abovebar, colTarget, size = size.tiny)
+
+alertcondition(setupArmed, "Bull flag armed",   "Bull flag A-B-C complete — fib extension levels projected. Watch the 1.0-extension buy zone.")
+alertcondition(buySignal,  "Bull flag buy",     "Price tagged the 1.0 trend-based fib extension inside a bull flag — buy zone hit.")
+alertcondition(stopHit,    "Bull flag stopped", "Close below the 1.618 fib extension — bull flag trade stopped out.")
+alertcondition(targetHit,  "Bull flag target",  "Pole −0.236 extension target reached — measured-move objective hit.")
