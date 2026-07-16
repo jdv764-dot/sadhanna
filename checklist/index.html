@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no" />
+<title>The Checklist</title>
+<meta name="description" content="A personal checklist app built on the principles of The Checklist Manifesto — short, sharp checklists that catch the dumb mistakes." />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="default" />
+<meta name="apple-mobile-web-app-title" content="Checklist" />
+<meta name="theme-color" content="#f6f4ef" />
+<link rel="manifest" href="manifest.webmanifest" />
+<link rel="apple-touch-icon" href="icon-180.png" />
+<link rel="icon" type="image/png" href="icon-180.png" />
+<style>
+  :root {
+    --bg: #f6f4ef;
+    --surface: #ffffff;
+    --surface-2: #efece4;
+    --line: #e2ddd0;
+    --ink: #21272e;
+    --muted: #7d7668;
+    --red: #c03b2b;        /* the book-cover red */
+    --red-soft: #f4ddd9;
+    --green: #2e7d4f;
+    --green-soft: #ddeee4;
+    --amber: #a8720e;
+    --amber-soft: #f5e8cd;
+    --sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
+    --serif: ui-serif, "New York", Georgia, serif;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--sans);
+    line-height: 1.55;
+    overscroll-behavior-y: none;
+    -webkit-font-smoothing: antialiased;
+  }
+  #app {
+    max-width: 640px;
+    margin: 0 auto;
+    padding: calc(env(safe-area-inset-top) + 18px) 18px calc(env(safe-area-inset-bottom) + 96px);
+    min-height: 100%;
+  }
+  header.appbar { margin-bottom: 16px; display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+  .appbar h1 { font-family: var(--serif); font-size: 27px; letter-spacing: 0.2px; }
+  .appbar h1 .tick { color: var(--red); }
+  .appbar p { color: var(--muted); font-size: 13.5px; margin-top: 1px; }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 15px 16px;
+    margin-bottom: 12px;
+    box-shadow: 0 1px 2px rgba(33, 39, 46, 0.05);
+  }
+  .card.tappable { cursor: pointer; }
+  .card.tappable:active { background: var(--surface-2); }
+
+  .badge {
+    display: inline-block; font-size: 10.5px; font-weight: 700; letter-spacing: 0.9px;
+    text-transform: uppercase; padding: 2px 8px; border-radius: 20px;
+  }
+  .badge.doconfirm { background: var(--green-soft); color: var(--green); }
+  .badge.readdo { background: var(--red-soft); color: var(--red); }
+  .badge.neutral { background: var(--surface-2); color: var(--muted); }
+
+  .list-card h2 { font-size: 18px; line-height: 1.3; margin: 5px 0 2px; }
+  .list-card .meta { color: var(--muted); font-size: 13px; }
+  .list-card .rowtop { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+  .iconbtn {
+    border: 1px solid var(--line); background: var(--surface); color: var(--muted);
+    width: 34px; height: 34px; border-radius: 10px; font-size: 16px; cursor: pointer; flex: none;
+  }
+  .iconbtn:active { background: var(--surface-2); }
+
+  .btn {
+    display: block; width: 100%; border: none; border-radius: 14px;
+    padding: 14px 16px; font-size: 16px; font-weight: 600; cursor: pointer;
+    font-family: var(--sans);
+  }
+  .btn:active { opacity: 0.85; }
+  .btn.primary { background: var(--ink); color: #fff; }
+  .btn.red { background: var(--red); color: #fff; }
+  .btn.ghost { background: transparent; border: 1.5px dashed var(--line); color: var(--muted); }
+  .btn.small { width: auto; display: inline-block; padding: 9px 14px; font-size: 14px; border-radius: 11px; }
+  .btn.subtle { background: var(--surface-2); color: var(--ink); }
+  .btn.danger-ghost { background: transparent; color: var(--red); border: 1px solid var(--red-soft); }
+  .btn + .btn { margin-top: 10px; }
+
+  .empty { text-align: center; color: var(--muted); padding: 36px 20px; }
+  .empty .big { font-size: 40px; margin-bottom: 8px; }
+  .empty h3 { color: var(--ink); font-size: 17px; margin-bottom: 4px; }
+  .empty p { font-size: 14px; }
+
+  /* ---------- editor ---------- */
+  label.fieldlabel { display: block; font-size: 12px; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase; color: var(--muted); margin: 16px 0 6px; }
+  input[type=text], textarea {
+    width: 100%; border: 1px solid var(--line); border-radius: 12px; background: var(--surface);
+    padding: 12px 13px; font-size: 16px; font-family: var(--sans); color: var(--ink); outline: none;
+  }
+  input[type=text]:focus, textarea:focus { border-color: var(--ink); }
+  .seg { display: flex; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; background: var(--surface); }
+  .seg button {
+    flex: 1; border: none; background: transparent; padding: 11px 6px; font-size: 14px; font-weight: 600;
+    color: var(--muted); cursor: pointer; font-family: var(--sans);
+  }
+  .seg button.on { background: var(--ink); color: #fff; }
+  .hint { font-size: 13px; color: var(--muted); margin-top: 6px; }
+  .item-row { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
+  .item-row input[type=text] { flex: 1; }
+  .killer-toggle {
+    flex: none; width: 40px; height: 44px; border-radius: 11px; border: 1px solid var(--line);
+    background: var(--surface); font-size: 17px; cursor: pointer; color: var(--line);
+  }
+  .killer-toggle.on { background: var(--red-soft); border-color: var(--red); color: var(--red); }
+  .warn {
+    background: var(--amber-soft); color: var(--amber); border-radius: 12px;
+    padding: 10px 13px; font-size: 13.5px; margin-top: 10px;
+  }
+
+  /* ---------- run ---------- */
+  .pausepoint {
+    background: var(--red-soft); border: 1px solid #eac3bc; border-radius: 14px;
+    padding: 12px 14px; margin-bottom: 14px;
+  }
+  .pausepoint .pp-label { font-size: 10.5px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--red); }
+  .pausepoint p { font-size: 15px; margin-top: 2px; }
+  .progressbar { height: 6px; background: var(--surface-2); border-radius: 6px; overflow: hidden; margin: 12px 0 16px; }
+  .progressbar > div { height: 100%; background: var(--green); border-radius: 6px; transition: width 0.25s ease; }
+  .runitem {
+    display: flex; align-items: flex-start; gap: 12px; width: 100%; text-align: left;
+    background: var(--surface); border: 1px solid var(--line); border-radius: 14px;
+    padding: 14px; margin-bottom: 9px; cursor: pointer; font-family: var(--sans);
+  }
+  .runitem:active { background: var(--surface-2); }
+  .runitem .box {
+    flex: none; width: 26px; height: 26px; border-radius: 8px; border: 2px solid var(--line);
+    display: flex; align-items: center; justify-content: center; font-size: 15px; color: #fff; margin-top: 1px;
+  }
+  .runitem.done { border-color: var(--green-soft); background: #f4faf6; }
+  .runitem.done .box { background: var(--green); border-color: var(--green); }
+  .runitem .txt { font-size: 16.5px; flex: 1; }
+  .runitem.done .txt { color: var(--muted); text-decoration: line-through; }
+  .runitem .kflag { font-size: 11px; font-weight: 700; letter-spacing: 0.7px; text-transform: uppercase; color: var(--red); display: block; }
+  .runhead h2 { font-family: var(--serif); font-size: 23px; line-height: 1.25; }
+  .runhead .meta { color: var(--muted); font-size: 13.5px; margin-top: 2px; }
+
+  .backlink { background: none; border: none; color: var(--muted); font-size: 15px; cursor: pointer; padding: 0 0 12px; font-family: var(--sans); display: inline-flex; align-items: center; gap: 4px; }
+
+  /* ---------- learn ---------- */
+  .learn-card h2 { font-family: var(--serif); font-size: 19px; margin: 4px 0 6px; line-height: 1.3; }
+  .learn-card p { font-size: 14.5px; color: #43494f; }
+  .learn-card .n { font-size: 11px; font-weight: 700; letter-spacing: 1px; color: var(--red); text-transform: uppercase; }
+  .quote {
+    border-left: 3px solid var(--red); padding: 2px 0 2px 12px; margin-top: 10px;
+    font-family: var(--serif); font-style: italic; color: #5a5347; font-size: 14.5px;
+  }
+
+  /* ---------- done screen ---------- */
+  .doneburst { text-align: center; padding: 30px 10px 10px; }
+  .doneburst .ring {
+    width: 92px; height: 92px; border-radius: 50%; background: var(--green); color: #fff;
+    font-size: 44px; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px;
+  }
+  .doneburst h2 { font-family: var(--serif); font-size: 24px; margin-bottom: 6px; }
+  .doneburst p { color: var(--muted); font-size: 15px; }
+
+  /* ---------- tab bar ---------- */
+  nav.tabbar {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 10;
+    background: rgba(255, 255, 255, 0.94); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+    border-top: 1px solid var(--line);
+    display: flex; justify-content: space-around;
+    padding: 8px 10px calc(env(safe-area-inset-bottom) + 8px);
+  }
+  .tabbar button {
+    background: none; border: none; font-family: var(--sans); cursor: pointer;
+    color: var(--muted); font-size: 11px; font-weight: 600; width: 84px;
+  }
+  .tabbar button .ic { display: block; font-size: 21px; margin-bottom: 1px; }
+  .tabbar button.on { color: var(--red); }
+
+  .section-label { font-size: 12px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); margin: 20px 0 10px; }
+  .toast {
+    position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(env(safe-area-inset-bottom) + 84px);
+    background: var(--ink); color: #fff; font-size: 14px; padding: 10px 18px; border-radius: 30px;
+    opacity: 0; transition: opacity 0.25s ease; pointer-events: none; z-index: 20; white-space: nowrap;
+  }
+  .toast.show { opacity: 1; }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div class="toast" id="toast"></div>
+
+<script>
+"use strict";
+
+/* ================= storage ================= */
+const KEY = "checklist-manifesto-v1";
+function load() {
+  try { return JSON.parse(localStorage.getItem(KEY)) || { lists: [], history: [] }; }
+  catch (e) { return { lists: [], history: [] }; }
+}
+function save() { localStorage.setItem(KEY, JSON.stringify(db)); }
+let db = load();
+
+const uid = () => Math.random().toString(36).slice(2, 10);
+
+/* ================= navigation state ================= */
+let view = { name: "home" };   // home | edit | run | done | templates | learn
+let tab = "lists";
+
+function go(v) { view = v; render(); window.scrollTo(0, 0); }
+
+function toast(msg) {
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  clearTimeout(toast._t);
+  toast._t = setTimeout(() => t.classList.remove("show"), 1800);
+}
+
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+/* ================= templates (inspired by the book) ================= */
+const TEMPLATES = [
+  {
+    title: "Morning Launch",
+    type: "DO-CONFIRM",
+    pause: "Before you walk out the door (or open your laptop).",
+    items: [
+      { text: "Phone, keys, wallet on you", killer: true },
+      { text: "Calendar checked — first commitment known", killer: true },
+      { text: "One most-important task chosen for today", killer: false },
+      { text: "Water / coffee / breakfast handled", killer: false },
+      { text: "Anything to bring? (returns, documents, gym bag)", killer: false },
+    ],
+  },
+  {
+    title: "Leaving the House",
+    type: "DO-CONFIRM",
+    pause: "Hand on the door handle.",
+    items: [
+      { text: "Stove and appliances off", killer: true },
+      { text: "Windows closed, door will be locked", killer: true },
+      { text: "Phone, keys, wallet", killer: true },
+      { text: "Lights off", killer: false },
+    ],
+  },
+  {
+    title: "Packing for a Trip",
+    type: "READ-DO",
+    pause: "The night before departure — never the morning of.",
+    items: [
+      { text: "Passport / ID and tickets in bag", killer: true },
+      { text: "Chargers + adapter packed", killer: true },
+      { text: "Medications packed", killer: true },
+      { text: "Weather checked, clothes match it", killer: false },
+      { text: "Toiletries packed", killer: false },
+      { text: "Home prep: plants, pets, thermostat, trash", killer: false },
+      { text: "Check-in done, boarding pass saved offline", killer: false },
+    ],
+  },
+  {
+    title: "Before Hitting Send",
+    type: "DO-CONFIRM",
+    pause: "Any email or message that matters — pause before send.",
+    items: [
+      { text: "Right recipients — and no wrong ones", killer: true },
+      { text: "Attachment actually attached", killer: true },
+      { text: "Names spelled correctly", killer: false },
+      { text: "The ask is clear in one sentence", killer: false },
+      { text: "Tone check: would I be fine if this were forwarded?", killer: false },
+    ],
+  },
+  {
+    title: "Meeting Prep",
+    type: "READ-DO",
+    pause: "Ten minutes before the meeting starts.",
+    items: [
+      { text: "Purpose of the meeting written in one line", killer: true },
+      { text: "Agenda or questions ready", killer: false },
+      { text: "Relevant docs open / printed", killer: false },
+      { text: "Know who's attending and what they need", killer: false },
+      { text: "Tech check: link works, mic works", killer: false },
+    ],
+  },
+  {
+    title: "Weekly Review",
+    type: "READ-DO",
+    pause: "Same time every week — put it in the calendar.",
+    items: [
+      { text: "Empty all inboxes (mail, notes, pockets)", killer: false },
+      { text: "Review calendar: last week + next two weeks", killer: true },
+      { text: "Update task list — kill the dead ones", killer: false },
+      { text: "Pick the 3 outcomes that matter next week", killer: true },
+      { text: "Money check: anything due, anything odd", killer: false },
+      { text: "One improvement to a checklist that failed you", killer: false },
+    ],
+  },
+  {
+    title: "Before a Big Purchase",
+    type: "DO-CONFIRM",
+    pause: "Anything over your personal threshold — sleep on it first.",
+    items: [
+      { text: "Waited at least 24 hours since the impulse", killer: true },
+      { text: "Compared at least two alternatives", killer: false },
+      { text: "Total cost known (fees, shipping, subscription traps)", killer: true },
+      { text: "Return policy checked", killer: false },
+      { text: "It solves a real problem I can name", killer: false },
+    ],
+  },
+  {
+    title: "Shutdown Ritual",
+    type: "READ-DO",
+    pause: "End of the workday, before you close the laptop.",
+    items: [
+      { text: "Tomorrow's first task written down", killer: true },
+      { text: "Loose ends captured — nothing lives only in your head", killer: true },
+      { text: "Calendar for tomorrow scanned", killer: false },
+      { text: "Say the words: shutdown complete", killer: false },
+    ],
+  },
+];
+
+/* ================= learn content ================= */
+const LEARN = [
+  {
+    t: "Why checklists work",
+    p: "Modern life fails in two ways: ignorance (we don't know enough) and ineptitude (we know, but fail to apply it). Most everyday failures are the second kind. A checklist is a defense against ineptitude — it catches the dumb, avoidable misses that even experts make under pressure.",
+    q: "“The volume and complexity of what we know has exceeded our individual ability to deliver its benefits correctly, safely, or reliably.”",
+  },
+  {
+    t: "Two kinds of checklist",
+    p: "DO-CONFIRM: do the job from memory, then pause and confirm nothing was missed — best for routines you know cold. READ-DO: read each step and do it as you go, like a recipe — best for rare or high-stakes procedures. Every checklist in this app is labeled one or the other.",
+  },
+  {
+    t: "Define a pause point",
+    p: "A checklist without a trigger never gets used. Tie each list to a clear pause point — hand on the door, before hitting send, night before the flight. The pause point is when you stop and run the list, every time.",
+  },
+  {
+    t: "Keep it short: 5–9 items",
+    p: "A good checklist is not a how-to guide. It holds only the killer items — the steps most dangerous to skip and most often skipped. Aim for five to nine items that fit in 60–90 seconds. If everything is on the list, nothing is.",
+    q: "“The checklist cannot be lengthy... After about sixty to ninety seconds, people start to shortcut. They skip steps.”",
+  },
+  {
+    t: "Wording matters",
+    p: "Use simple, exact language. 'Passport in bag' beats 'get ready for travel'. Each item should be a single, verifiable action — you can look and know instantly whether it's done.",
+  },
+  {
+    t: "Test it in the real world",
+    p: "No checklist is right on the first draft. Boeing tests theirs in simulators; you test yours in real mornings and real trips. When a list fails you — too long, wrong order, missing the one thing that actually went wrong — revise it. A checklist is a living document.",
+  },
+  {
+    t: "Discipline is not a crutch",
+    p: "Pilots and surgeons — the best in the world — use checklists precisely because they are experts. The list frees your mind from remembering the routine so it can focus on the hard, unpredictable parts. Discipline enables mastery; it doesn't replace it.",
+    q: "“The checklist gets the dumb stuff out of the way... to let you focus on the hard stuff.”",
+  },
+  {
+    t: "Make the team talk",
+    p: "Gawande's surgical checklist includes a step where everyone in the room says their name and role. It sounds trivial, but people who have spoken once are far more likely to speak up when they see a problem. If your checklist involves others, build in a moment of communication.",
+  },
+];
+
+/* ================= render ================= */
+const app = document.getElementById("app");
+
+function render() {
+  switch (view.name) {
+    case "home":      return renderHome();
+    case "edit":      return renderEdit();
+    case "run":       return renderRun();
+    case "done":      return renderDone();
+    case "templates": return renderTemplates();
+    case "learn":     return renderLearn();
+  }
+}
+
+function tabbar() {
+  return `
+  <nav class="tabbar">
+    <button class="${tab === "lists" ? "on" : ""}" onclick="setTab('lists')"><span class="ic">☑︎</span>Checklists</button>
+    <button class="${tab === "templates" ? "on" : ""}" onclick="setTab('templates')"><span class="ic">⊞</span>Templates</button>
+    <button class="${tab === "learn" ? "on" : ""}" onclick="setTab('learn')"><span class="ic">✎</span>Principles</button>
+  </nav>`;
+}
+function setTab(t) {
+  tab = t;
+  go({ name: t === "lists" ? "home" : t });
+}
+
+function typeBadge(type) {
+  return type === "READ-DO"
+    ? `<span class="badge readdo">Read – Do</span>`
+    : `<span class="badge doconfirm">Do – Confirm</span>`;
+}
+
+/* ---------- home ---------- */
+function renderHome() {
+  const lists = db.lists;
+  let body;
+  if (!lists.length) {
+    body = `
+      <div class="empty">
+        <div class="big">☑︎</div>
+        <h3>No checklists yet</h3>
+        <p>Start from a template, or build your own.<br/>Short. Sharp. Five to nine items.</p>
+      </div>
+      <button class="btn red" onclick="setTab('templates')">Browse templates</button>
+      <button class="btn ghost" onclick="newList()">Build my own</button>`;
+  } else {
+    body = lists.map(l => {
+      const runs = l.runs ? `${l.runs} run${l.runs > 1 ? "s" : ""}` : "never run";
+      const last = l.lastRun ? ` · last ${timeAgo(l.lastRun)}` : "";
+      return `
+      <div class="card list-card tappable" onclick="startRun('${l.id}')">
+        <div class="rowtop">
+          <div>
+            ${typeBadge(l.type)}
+            <h2>${esc(l.title)}</h2>
+            <div class="meta">${l.items.length} items · ${runs}${last}</div>
+          </div>
+          <button class="iconbtn" onclick="event.stopPropagation(); editList('${l.id}')" aria-label="Edit">✎</button>
+        </div>
+      </div>`;
+    }).join("") + `
+      <button class="btn ghost" onclick="newList()">＋ New checklist</button>`;
+  }
+
+  app.innerHTML = `
+    <header class="appbar">
+      <div>
+        <h1><span class="tick">☑</span> The Checklist</h1>
+        <p>Getting the dumb stuff out of the way.</p>
+      </div>
+    </header>
+    ${body}
+    ${tabbar()}`;
+}
+
+function timeAgo(ts) {
+  const d = Math.floor((Date.now() - ts) / 86400000);
+  if (d <= 0) return "today";
+  if (d === 1) return "yesterday";
+  if (d < 30) return `${d} days ago`;
+  return new Date(ts).toLocaleDateString();
+}
+
+/* ---------- editor ---------- */
+let draft = null;
+
+function newList() {
+  draft = { id: uid(), title: "", type: "DO-CONFIRM", pause: "", items: [{ id: uid(), text: "", killer: false }], runs: 0, lastRun: null };
+  go({ name: "edit", isNew: true });
+}
+function editList(id) {
+  const l = db.lists.find(x => x.id === id);
+  draft = JSON.parse(JSON.stringify(l));
+  go({ name: "edit", isNew: false });
+}
+
+function renderEdit() {
+  const d = draft;
+  const tooMany = d.items.filter(i => i.text.trim()).length > 9;
+  app.innerHTML = `
+    <button class="backlink" onclick="cancelEdit()">‹ Back</button>
+    <header class="appbar"><div><h1>${view.isNew ? "New checklist" : "Edit checklist"}</h1></div></header>
+
+    <label class="fieldlabel">Name</label>
+    <input type="text" id="f-title" value="${esc(d.title)}" placeholder="e.g. Leaving the house"
+      oninput="draft.title=this.value" />
+
+    <label class="fieldlabel">Type</label>
+    <div class="seg">
+      <button class="${d.type === "DO-CONFIRM" ? "on" : ""}" onclick="setType('DO-CONFIRM')">Do – Confirm</button>
+      <button class="${d.type === "READ-DO" ? "on" : ""}" onclick="setType('READ-DO')">Read – Do</button>
+    </div>
+    <p class="hint">${d.type === "DO-CONFIRM"
+      ? "Work from memory, then pause and confirm nothing was missed. For routines you know cold."
+      : "Read each step and do it as you go, like a recipe. For rare or high-stakes procedures."}</p>
+
+    <label class="fieldlabel">Pause point — when do you run this?</label>
+    <input type="text" id="f-pause" value="${esc(d.pause)}" placeholder="e.g. Hand on the door handle"
+      oninput="draft.pause=this.value" />
+
+    <label class="fieldlabel">Items <span style="font-weight:400;text-transform:none;letter-spacing:0">· tap ⚑ to mark a killer item</span></label>
+    ${d.items.map((it, i) => `
+      <div class="item-row">
+        <input type="text" value="${esc(it.text)}" placeholder="One clear, checkable action"
+          oninput="draft.items[${i}].text=this.value" />
+        <button class="killer-toggle ${it.killer ? "on" : ""}" onclick="toggleKiller(${i})" aria-label="killer item">⚑</button>
+        <button class="iconbtn" onclick="removeItem(${i})" aria-label="remove">✕</button>
+      </div>`).join("")}
+    <button class="btn small subtle" onclick="addItem()">＋ Add item</button>
+    ${tooMany ? `<div class="warn">⚠️ More than 9 items. The book's rule: keep only the killer items — the steps most dangerous to skip. Can anything go?</div>` : ""}
+
+    <div style="margin-top:24px">
+      <button class="btn primary" onclick="saveList()">Save checklist</button>
+      ${!view.isNew ? `<button class="btn danger-ghost" onclick="deleteList()">Delete checklist</button>` : ""}
+    </div>
+    ${tabbar()}`;
+}
+
+function setType(t) { draft.type = t; render(); }
+function toggleKiller(i) { draft.items[i].killer = !draft.items[i].killer; render(); }
+function addItem() { draft.items.push({ id: uid(), text: "", killer: false }); render(); focusLastItem(); }
+function focusLastItem() {
+  const rows = document.querySelectorAll(".item-row input");
+  if (rows.length) rows[rows.length - 1].focus();
+}
+function removeItem(i) { draft.items.splice(i, 1); if (!draft.items.length) addItem(); else render(); }
+function cancelEdit() { draft = null; go({ name: "home" }); }
+
+function saveList() {
+  draft.title = draft.title.trim();
+  draft.items = draft.items.filter(i => i.text.trim());
+  if (!draft.title) { toast("Give it a name"); return; }
+  if (!draft.items.length) { toast("Add at least one item"); return; }
+  const i = db.lists.findIndex(x => x.id === draft.id);
+  if (i >= 0) db.lists[i] = draft; else db.lists.push(draft);
+  save();
+  draft = null;
+  tab = "lists";
+  go({ name: "home" });
+  toast("Saved");
+}
+function deleteList() {
+  if (!confirm("Delete this checklist?")) return;
+  db.lists = db.lists.filter(x => x.id !== draft.id);
+  save();
+  draft = null;
+  go({ name: "home" });
+}
+
+/* ---------- run ---------- */
+let run = null;
+
+function startRun(id) {
+  const l = db.lists.find(x => x.id === id);
+  if (!l || !l.items.length) { editList(id); return; }
+  run = { listId: id, checked: {} };
+  go({ name: "run" });
+}
+
+function renderRun() {
+  const l = db.lists.find(x => x.id === run.listId);
+  const total = l.items.length;
+  const done = l.items.filter(i => run.checked[i.id]).length;
+  const pct = total ? Math.round(done / total * 100) : 0;
+
+  app.innerHTML = `
+    <button class="backlink" onclick="abortRun()">‹ Cancel</button>
+    <div class="runhead">
+      ${typeBadge(l.type)}
+      <h2>${esc(l.title)}</h2>
+      <div class="meta">${done} of ${total} checked</div>
+    </div>
+    <div class="progressbar"><div style="width:${pct}%"></div></div>
+    ${l.pause ? `<div class="pausepoint"><div class="pp-label">Pause point</div><p>${esc(l.pause)}</p></div>` : ""}
+    ${l.items.map(it => `
+      <button class="runitem ${run.checked[it.id] ? "done" : ""}" onclick="toggleRunItem('${it.id}')">
+        <span class="box">${run.checked[it.id] ? "✓" : ""}</span>
+        <span class="txt">${it.killer ? `<span class="kflag">⚑ killer item</span>` : ""}${esc(it.text)}</span>
+      </button>`).join("")}
+    <div style="margin-top:18px">
+      <button class="btn ${done === total ? "red" : "subtle"}" onclick="completeRun()">
+        ${done === total ? "Checklist complete ✓" : "Finish anyway"}
+      </button>
+    </div>
+    ${tabbar()}`;
+}
+
+function toggleRunItem(id) {
+  run.checked[id] = !run.checked[id];
+  render();
+}
+function abortRun() { run = null; go({ name: "home" }); }
+
+function completeRun() {
+  const l = db.lists.find(x => x.id === run.listId);
+  const missedKillers = l.items.filter(i => i.killer && !run.checked[i.id]);
+  if (missedKillers.length) {
+    if (!confirm(`⚑ ${missedKillers.length} killer item${missedKillers.length > 1 ? "s" : ""} unchecked:\n\n• ${missedKillers.map(i => i.text).join("\n• ")}\n\nThese are the ones that bite. Finish anyway?`)) return;
+  }
+  const done = l.items.filter(i => run.checked[i.id]).length;
+  l.runs = (l.runs || 0) + 1;
+  l.lastRun = Date.now();
+  db.history.unshift({ id: uid(), listId: l.id, title: l.title, when: Date.now(), done, total: l.items.length });
+  db.history = db.history.slice(0, 200);
+  save();
+  view = { name: "done", done, total: l.items.length, title: l.title };
+  run = null;
+  render();
+  window.scrollTo(0, 0);
+}
+
+function renderDone() {
+  const all = view.done === view.total;
+  app.innerHTML = `
+    <div class="doneburst">
+      <div class="ring" style="${all ? "" : "background:var(--amber)"}">${all ? "✓" : "…"}</div>
+      <h2>${all ? "All clear." : "Finished with gaps"}</h2>
+      <p>${esc(view.title)} — ${view.done} of ${view.total} checked.</p>
+      <p style="margin-top:10px;font-family:var(--serif);font-style:italic">
+        ${all ? "“Just ticking boxes is not the ultimate goal here. Embracing a culture of teamwork and discipline is.”" : "A miss is information. If an item keeps getting skipped, the list — or the routine — needs fixing."}
+      </p>
+    </div>
+    <div style="margin-top:24px">
+      <button class="btn primary" onclick="go({name:'home'})">Done</button>
+    </div>
+    ${tabbar()}`;
+}
+
+/* ---------- templates ---------- */
+function renderTemplates() {
+  app.innerHTML = `
+    <header class="appbar">
+      <div>
+        <h1>Templates</h1>
+        <p>Starter checklists built on the book's rules. Add one, then make it yours.</p>
+      </div>
+    </header>
+    ${TEMPLATES.map((t, i) => `
+      <div class="card list-card tappable" onclick="addTemplate(${i})">
+        <div class="rowtop">
+          <div>
+            ${typeBadge(t.type)}
+            <h2>${esc(t.title)}</h2>
+            <div class="meta">${t.items.length} items · ${t.items.filter(x => x.killer).length} killer</div>
+          </div>
+          <button class="iconbtn" aria-label="add">＋</button>
+        </div>
+      </div>`).join("")}
+    ${tabbar()}`;
+}
+
+function addTemplate(i) {
+  const t = TEMPLATES[i];
+  db.lists.push({
+    id: uid(),
+    title: t.title,
+    type: t.type,
+    pause: t.pause,
+    items: t.items.map(x => ({ id: uid(), text: x.text, killer: x.killer })),
+    runs: 0,
+    lastRun: null,
+  });
+  save();
+  tab = "lists";
+  go({ name: "home" });
+  toast(`Added “${t.title}”`);
+}
+
+/* ---------- learn ---------- */
+function renderLearn() {
+  app.innerHTML = `
+    <header class="appbar">
+      <div>
+        <h1>Principles</h1>
+        <p>From <em>The Checklist Manifesto</em> by Atul Gawande.</p>
+      </div>
+    </header>
+    ${LEARN.map((c, i) => `
+      <div class="card learn-card">
+        <span class="n">Principle ${i + 1}</span>
+        <h2>${esc(c.t)}</h2>
+        <p>${esc(c.p)}</p>
+        ${c.q ? `<div class="quote">${esc(c.q)}</div>` : ""}
+      </div>`).join("")}
+    <div class="card learn-card">
+      <h2>Read the book</h2>
+      <p><em>The Checklist Manifesto: How to Get Things Right</em> — Atul Gawande, 2009. Two hundred pages that will change how you think about competence.</p>
+    </div>
+    ${tabbar()}`;
+}
+
+/* ================= boot ================= */
+render();
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));
+}
+</script>
+</body>
+</html>
