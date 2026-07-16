@@ -1,0 +1,431 @@
+// NeoWave Active Setups — wave 4, wave 5, and B/C correction setups
+//
+// Shows only the setup that is live RIGHT NOW, and nothing else:
+//   • WAVE 4 — waves 0-3 confirmed, wave-4 pullback unfolding.
+//     Target zone: 0.382-0.50 retrace of wave 3. Wrong if wave 1 territory is entered.
+//   • WAVE 5 — waves 0-4 confirmed, wave 5 unfolding.
+//     Target zone: 0.618-1.0 x wave 1 from the wave-4 pivot. Wrong below/above wave-1 extreme.
+//   • WAVE B — a 5-wave impulse just completed and leg A of the correction is
+//     confirmed; the B bounce is unfolding. Zone: 0.382-0.618 retrace of A.
+//   • WAVE C — legs A and B confirmed; wave C unfolding.
+//     Target zone: 1.0-1.618 x A from the B pivot. Wrong beyond the correction origin.
+//
+// Every drawing is wiped the moment a setup resolves (next pivot confirms) or
+// is invalidated, so the chart never shows stale counts. A blank chart simply
+// means nothing qualifies at the current pivot strength.
+//
+// How to use: TradingView → Pine Editor → paste this file → "Add to chart".
+
+//@version=6
+indicator("NeoWave Active Setups", "Active Setups", overlay = true, max_lines_count = 100, max_labels_count = 100)
+
+// ─────────────────────────── Inputs ───────────────────────────
+grpD = "Detection"
+pivLen = input.int(6, "Pivot strength (bars each side)", minval = 2, maxval = 50, group = grpD, tooltip = "A swing high/low must be the extreme of this many bars on each side. Higher = fewer, larger waves.")
+bullOn = input.bool(true, "Bullish impulses (and the corrections after them)", group = grpD)
+bearOn = input.bool(true, "Bearish impulses (and the corrections after them)", group = grpD)
+
+grpT = "Setup types"
+showW4 = input.bool(true, "Wave 4 in progress", group = grpT)
+showW5 = input.bool(true, "Wave 5 in progress", group = grpT)
+showB = input.bool(true, "Wave B in progress", group = grpT)
+showC = input.bool(true, "Wave C in progress", group = grpT)
+
+grpF = "Projections"
+fib4a = input.float(0.382, "Wave-4 target (x Wave 3 retrace)", step = 0.001, group = grpF)
+fib4b = input.float(0.500, "Wave-4 deep (x Wave 3 retrace)", step = 0.001, group = grpF)
+fib5a = input.float(0.618, "Wave-5 target (x Wave 1)", step = 0.001, group = grpF)
+fib5b = input.float(1.000, "Wave-5 stretch (x Wave 1)", step = 0.001, group = grpF)
+fibBa = input.float(0.382, "Wave-B zone from (x Wave A retrace)", step = 0.001, group = grpF)
+fibBb = input.float(0.618, "Wave-B zone to (x Wave A retrace)", step = 0.001, group = grpF)
+fibCa = input.float(1.000, "Wave-C target (x Wave A)", step = 0.001, group = grpF)
+fibCb = input.float(1.618, "Wave-C stretch (x Wave A)", step = 0.001, group = grpF)
+
+grpS = "Style"
+waveCol = input.color(#2962ff, "Wave lines & numbers", group = grpS)
+tgtCol = input.color(#089981, "Target level", group = grpS)
+strCol = input.color(#787b86, "Stretch level", group = grpS)
+invCol = input.color(#9c27b0, "Invalidation level", group = grpS)
+showTable = input.bool(true, "Show setup panel", group = grpS)
+
+// ─────────────────────── Pivot bookkeeping ────────────────────
+var array<float> pP = array.new<float>() // pivot price
+var array<int>   pB = array.new<int>()   // pivot bar index
+var array<int>   pD = array.new<int>()   // +1 swing high, -1 swing low
+
+int MAXPIV = 60
+
+// Append a pivot, enforcing strict high/low alternation. If two pivots in a
+// row point the same way, keep the more extreme one. Returns true when the
+// pivot list changed (worth re-scanning for a setup).
+addPivot(float price, int b, int dir) =>
+    bool changed = false
+    n = array.size(pD)
+    if n > 0 and array.get(pD, n - 1) == dir
+        if (dir == 1 and price >= array.get(pP, n - 1)) or (dir == -1 and price <= array.get(pP, n - 1))
+            array.set(pP, n - 1, price)
+            array.set(pB, n - 1, b)
+            changed := true
+    else
+        array.push(pP, price)
+        array.push(pB, b)
+        array.push(pD, dir)
+        changed := true
+    if array.size(pD) > MAXPIV
+        array.shift(pP)
+        array.shift(pB)
+        array.shift(pD)
+    changed
+
+ph = ta.pivothigh(high, pivLen, pivLen)
+pl = ta.pivotlow(low, pivLen, pivLen)
+
+bool newPiv = false
+if not na(ph)
+    newPiv := addPivot(ph, bar_index - pivLen, 1) or newPiv
+if not na(pl)
+    newPiv := addPivot(pl, bar_index - pivLen, -1) or newPiv
+
+// Number of pivots confirmed strictly after bar `b`.
+pivotsAfter(int b) =>
+    int c = 0
+    int i = array.size(pB) - 1
+    while i >= 0 and array.get(pB, i) > b
+        c += 1
+        i -= 1
+    c
+
+// ───────────────────────── Setup model ────────────────────────
+type Setup
+    string kind    // "W4" | "W5" | "B" | "C"
+    string title
+    int    invSign // invalid when (close - inv) * invSign < 0
+    int    tSign   // target hit when tSign > 0 ? high >= t1 : low <= t1
+    float  t1
+    float  t2
+    float  inv
+    string invTxt
+    string nextLbl
+    float  watch = na // setup stale when (close - watch) * watchSign > 0
+    int    watchSign = 0
+    array<float>  px
+    array<int>    bx
+    array<string> lb
+    string stat1n
+    string stat1v
+    string stat2n
+    string stat2v
+
+pct(float x) =>
+    str.tostring(x * 100, "#") + "%"
+
+// ─────────────────── Impulse-based setups ─────────────────────
+// Inviolable rules enforced: wave 2 never retraces all of wave 1; wave 4
+// stays out of wave 1 territory; wave 3 never the shortest (checked when
+// wave 5 is known, i.e. in completed-impulse detection).
+
+// Waves 0-4 confirmed → wave 5 in progress.
+buildW5(int up) =>
+    Setup s = na
+    n = array.size(pD)
+    if n >= 5 and array.get(pD, n - 1) == -up
+        f4 = array.get(pP, n - 1)
+        f3 = array.get(pP, n - 2)
+        f2 = array.get(pP, n - 3)
+        f1 = array.get(pP, n - 4)
+        f0 = array.get(pP, n - 5)
+        w1len = (f1 - f0) * up
+        w3len = (f3 - f2) * up
+        shape = w1len > 0 and (f1 - f2) * up > 0 and (f3 - f1) * up > 0 and (f3 - f4) * up > 0
+        rule1 = (f2 - f0) * up > 0
+        rule4 = (f4 - f1) * up > 0
+        if shape and rule1 and rule4
+            tt1 = f4 + fib5a * w1len * up
+            tt2 = f4 + fib5b * w1len * up
+            s := Setup.new(kind = "W5", title = (up == 1 ? "BULLISH" : "BEARISH") + " IMPULSE — WAVE 5 IN PROGRESS", invSign = up, tSign = up, t1 = tt1, t2 = tt2, inv = f1, invTxt = (up == 1 ? "Wrong below " : "Wrong above ") + str.tostring(f1, format.mintick), nextLbl = "⑤?", px = array.from(f0, f1, f2, f3, f4), bx = array.from(array.get(pB, n - 5), array.get(pB, n - 4), array.get(pB, n - 3), array.get(pB, n - 2), array.get(pB, n - 1)), lb = array.from("⓪", "①", "②", "③", "④"), stat1n = "W2 retrace of W1", stat1v = pct((f1 - f2) * up / w1len), stat2n = "W3 vs W1", stat2v = str.tostring(w3len / w1len, "#.##") + "×")
+    s
+
+// Waves 0-3 confirmed → wave-4 pullback in progress.
+// Quality filter: wave 3 must be at least as long as wave 1.
+buildW4(int up) =>
+    Setup s = na
+    n = array.size(pD)
+    if n >= 4 and array.get(pD, n - 1) == up
+        f3 = array.get(pP, n - 1)
+        f2 = array.get(pP, n - 2)
+        f1 = array.get(pP, n - 3)
+        f0 = array.get(pP, n - 4)
+        w1len = (f1 - f0) * up
+        w3len = (f3 - f2) * up
+        shape = w1len > 0 and (f1 - f2) * up > 0 and (f3 - f1) * up > 0
+        rule1 = (f2 - f0) * up > 0
+        if shape and rule1 and w3len >= w1len
+            tt1 = f3 - fib4a * w3len * up
+            tt2 = f3 - fib4b * w3len * up
+            s := Setup.new(kind = "W4", title = (up == 1 ? "BULLISH" : "BEARISH") + " IMPULSE — WAVE 4 IN PROGRESS", invSign = up, tSign = -up, t1 = tt1, t2 = tt2, inv = f1, invTxt = (up == 1 ? "Wrong below " : "Wrong above ") + str.tostring(f1, format.mintick), nextLbl = "④?", watch = f3, watchSign = up, px = array.from(f0, f1, f2, f3), bx = array.from(array.get(pB, n - 4), array.get(pB, n - 3), array.get(pB, n - 2), array.get(pB, n - 1)), lb = array.from("⓪", "①", "②", "③"), stat1n = "W2 retrace of W1", stat1v = pct((f1 - f2) * up / w1len), stat2n = "W3 vs W1", stat2v = str.tostring(w3len / w1len, "#.##") + "×")
+    s
+
+// ─────────────── Correction anchor (post-impulse) ─────────────
+// A completed, rule-clean 5-wave impulse arms the A-B-C tracker: the
+// correction is expected to run opposite to the impulse from its end pivot.
+var float corrOrigin = na
+var int   corrOriginBar = na
+var int   corrDir = 0 // direction the correction travels; 0 = no anchor
+
+// Completed impulse ending at the most recent pivot → [found, endPrice, endBar].
+detectDone(int up) =>
+    bool ok = false
+    float ep = na
+    int eb = na
+    n = array.size(pD)
+    if n >= 6 and array.get(pD, n - 1) == up
+        f5 = array.get(pP, n - 1)
+        f4 = array.get(pP, n - 2)
+        f3 = array.get(pP, n - 3)
+        f2 = array.get(pP, n - 4)
+        f1 = array.get(pP, n - 5)
+        f0 = array.get(pP, n - 6)
+        w1len = (f1 - f0) * up
+        w3len = (f3 - f2) * up
+        w5len = (f5 - f4) * up
+        shape = w1len > 0 and (f1 - f2) * up > 0 and (f3 - f1) * up > 0 and (f3 - f4) * up > 0 and (f5 - f3) * up > 0
+        rule1 = (f2 - f0) * up > 0
+        rule3 = not (w3len <= w1len and w3len <= w5len)
+        rule4 = (f4 - f1) * up > 0
+        if shape and rule1 and rule3 and rule4
+            ok := true
+            ep := f5
+            eb := array.get(pB, n - 1)
+    [ok, ep, eb]
+
+// Leg A confirmed after the impulse top/bottom → wave B bounce in progress.
+buildB() =>
+    Setup s = na
+    n = array.size(pD)
+    cd = corrDir
+    pA = array.get(pP, n - 1)
+    bA = array.get(pB, n - 1)
+    aLen = (pA - corrOrigin) * cd
+    if aLen > 0
+        tt1 = pA - fibBa * aLen * cd
+        tt2 = pA - fibBb * aLen * cd
+        s := Setup.new(kind = "B", title = "A-B-C " + (cd == 1 ? "UP" : "DOWN") + " — WAVE B IN PROGRESS", invSign = cd, tSign = -cd, t1 = tt1, t2 = tt2, inv = corrOrigin, invTxt = (cd == -1 ? "Wrong above " : "Wrong below ") + str.tostring(corrOrigin, format.mintick), nextLbl = "Ⓑ?", px = array.from(corrOrigin, pA), bx = array.from(corrOriginBar, bA), lb = array.from("", "Ⓐ"), stat1n = "Wave A length", stat1v = str.tostring(aLen, format.mintick), stat2n = "Correction origin", stat2v = str.tostring(corrOrigin, format.mintick))
+    s
+
+// Legs A and B confirmed → wave C in progress.
+buildC() =>
+    Setup s = na
+    n = array.size(pD)
+    cd = corrDir
+    pBv = array.get(pP, n - 1)
+    bBv = array.get(pB, n - 1)
+    pA = array.get(pP, n - 2)
+    bA = array.get(pB, n - 2)
+    aLen = (pA - corrOrigin) * cd
+    bRet = aLen > 0 ? (pBv - pA) * -cd / aLen : na
+    // B must retrace part of A without exceeding the correction origin.
+    if aLen > 0 and bRet > 0 and (corrOrigin - pBv) * -cd > 0
+        tt1 = pBv + fibCa * aLen * cd
+        tt2 = pBv + fibCb * aLen * cd
+        s := Setup.new(kind = "C", title = "A-B-C " + (cd == 1 ? "UP" : "DOWN") + " — WAVE C IN PROGRESS", invSign = cd, tSign = cd, t1 = tt1, t2 = tt2, inv = corrOrigin, invTxt = (cd == -1 ? "Wrong above " : "Wrong below ") + str.tostring(corrOrigin, format.mintick), nextLbl = "Ⓒ?", px = array.from(corrOrigin, pA, pBv), bx = array.from(corrOriginBar, bA, bBv), lb = array.from("", "Ⓐ", "Ⓑ"), stat1n = "B retrace of A", stat1v = pct(bRet), stat2n = "Wave A length", stat2v = str.tostring(aLen, format.mintick))
+    s
+
+// ─────────────────────── Drawing state ────────────────────────
+var array<line>  wLn = array.new<line>()
+var array<label> wLb = array.new<label>()
+var line  tgtLn = na
+var line  strLn = na
+var line  invLn = na
+var label tgtLb = na
+var label strLb = na
+var label invLb = na
+
+var string actKind = ""
+var string actTitle = ""
+var int    invSignv = 0
+var int    tSignv = 0
+var float  t1v = na
+var float  t2v = na
+var float  invLvlv = na
+var string invTxtv = ""
+var float  watchv = na
+var int    watchSignv = 0
+var bool   tgtHit = false
+var string st1n = ""
+var string st1v = ""
+var string st2n = ""
+var string st2v = ""
+
+mkNum(int b, float p, string txt, bool below) =>
+    label.new(b, p, txt, style = below ? label.style_label_up : label.style_label_down, color = color.new(color.white, 100), textcolor = waveCol, size = size.normal)
+
+mkLvl(int b1, float y, color c, string sty) =>
+    line.new(b1, y, bar_index, y, color = c, style = sty, width = 1)
+
+mkTag(float y, string txt, color c) =>
+    label.new(bar_index, y, txt, style = label.style_label_left, color = color.new(c, 85), textcolor = c, size = size.small)
+
+// ─────────────────────── Per-bar logic ────────────────────────
+bool resolved = false
+
+// 1) A freshly completed impulse arms the correction tracker and resolves
+//    any active wave-4/5 setup.
+if newPiv
+    [okB, epB, ebB] = detectDone(1)
+    [okS, epS, ebS] = detectDone(-1)
+    if okB and bullOn
+        if actKind == "W5" or actKind == "W4"
+            resolved := true
+        corrOrigin := epB
+        corrOriginBar := ebB
+        corrDir := -1
+    else if okS and bearOn
+        if actKind == "W5" or actKind == "W4"
+            resolved := true
+        corrOrigin := epS
+        corrOriginBar := ebS
+        corrDir := 1
+
+// 2) Anchor maintenance: trend resumption beyond the origin disarms it, and a
+//    confirmed third pivot (the wave-C extreme) means the correction is done.
+if corrDir != 0 and (close - corrOrigin) * corrDir < 0
+    corrDir := 0
+int nAfter = corrDir != 0 ? pivotsAfter(corrOriginBar) : 0
+if newPiv and corrDir != 0 and nAfter >= 3
+    if actKind == "C" or actKind == "B"
+        resolved := true
+    corrDir := 0
+
+// 3) Look for the freshest setup. While the correction tracker is armed the
+//    impulse detectors stand down (their pivots belong to the finished move).
+Setup cand = na
+if newPiv
+    if corrDir == 0
+        if showW5 and bullOn
+            cand := buildW5(1)
+        if na(cand) and showW5 and bearOn
+            cand := buildW5(-1)
+        if na(cand) and showW4 and bullOn
+            cand := buildW4(1)
+        if na(cand) and showW4 and bearOn
+            cand := buildW4(-1)
+    else
+        if showC and nAfter == 2
+            cand := buildC()
+        if na(cand) and showB and nAfter == 1
+            cand := buildB()
+
+bool candFound = not na(cand)
+
+// 4) Monitor the live setup (skipped when it is being replaced this bar).
+bool justInvalid = false
+bool justTarget = false
+bool staleClear = false
+if actKind != "" and not candFound and not resolved
+    if (close - invLvlv) * invSignv < 0
+        justInvalid := true
+    else if not na(watchv) and (close - watchv) * watchSignv > 0
+        staleClear := true // wave 3 is still extending; the wave-4 pivot was premature
+    else if not tgtHit and (tSignv == 1 ? high >= t1v : low <= t1v)
+        justTarget := true
+        tgtHit := true
+
+// 5) Wipe the chart when the setup is replaced, resolved, invalidated or stale.
+if candFound or justInvalid or staleClear or resolved
+    for l in wLn
+        line.delete(l)
+    array.clear(wLn)
+    for lb in wLb
+        label.delete(lb)
+    array.clear(wLb)
+    if not na(tgtLn)
+        line.delete(tgtLn)
+        tgtLn := na
+    if not na(strLn)
+        line.delete(strLn)
+        strLn := na
+    if not na(invLn)
+        line.delete(invLn)
+        invLn := na
+    if not na(tgtLb)
+        label.delete(tgtLb)
+        tgtLb := na
+    if not na(strLb)
+        label.delete(strLb)
+        strLb := na
+    if not na(invLb)
+        label.delete(invLb)
+        invLb := na
+    actKind := ""
+
+// 6) Draw the new setup.
+if candFound
+    int npts = array.size(cand.px)
+    for i = 0 to npts - 1
+        float py = array.get(cand.px, i)
+        int pbx = array.get(cand.bx, i)
+        if i < npts - 1
+            array.push(wLn, line.new(pbx, py, array.get(cand.bx, i + 1), array.get(cand.px, i + 1), color = waveCol, width = 2))
+        string lt = array.get(cand.lb, i)
+        if lt != ""
+            float nb = i < npts - 1 ? array.get(cand.px, i + 1) : array.get(cand.px, i - 1)
+            array.push(wLb, mkNum(pbx, py, lt, py < nb))
+    int lastB = array.get(cand.bx, npts - 1)
+    int firstB = array.get(cand.bx, 0)
+    tgtLn := mkLvl(lastB, cand.t1, tgtCol, line.style_dotted)
+    strLn := mkLvl(lastB, cand.t2, strCol, line.style_dotted)
+    invLn := mkLvl(firstB, cand.inv, invCol, line.style_dashed)
+    tgtLb := mkTag(cand.t1, cand.nextLbl + " Target " + str.tostring(cand.t1, format.mintick), tgtCol)
+    strLb := mkTag(cand.t2, "Stretch " + str.tostring(cand.t2, format.mintick), strCol)
+    invLb := mkTag(cand.inv, cand.invTxt, invCol)
+
+    actKind := cand.kind
+    actTitle := cand.title
+    invSignv := cand.invSign
+    tSignv := cand.tSign
+    t1v := cand.t1
+    t2v := cand.t2
+    invLvlv := cand.inv
+    invTxtv := cand.invTxt
+    watchv := cand.watch
+    watchSignv := cand.watchSign
+    st1n := cand.stat1n
+    st1v := cand.stat1v
+    st2n := cand.stat2n
+    st2v := cand.stat2v
+    tgtHit := false
+
+// 7) Keep the projected levels pinned to the right edge of the chart.
+if not na(tgtLn)
+    line.set_x2(tgtLn, bar_index)
+    label.set_x(tgtLb, bar_index)
+if not na(strLn)
+    line.set_x2(strLn, bar_index)
+    label.set_x(strLb, bar_index)
+if not na(invLn)
+    line.set_x2(invLn, bar_index)
+    label.set_x(invLb, bar_index)
+
+alertcondition(candFound, "Setup detected / updated", "Active Setups: a live setup was detected or updated (wave 4, wave 5, B or C).")
+alertcondition(justTarget, "Target reached", "Active Setups: price reached the setup's first target.")
+alertcondition(justInvalid, "Setup invalidated", "Active Setups: the live setup was invalidated and removed.")
+alertcondition(resolved, "Setup resolved", "Active Setups: the live setup resolved (next wave pivot confirmed).")
+
+// ───────────────────────── Setup panel ────────────────────────
+var table tb = table.new(position.bottom_right, 2, 5, bgcolor = color.new(color.white, 10), border_width = 1, border_color = color.new(color.gray, 80), frame_width = 1, frame_color = color.new(color.gray, 60))
+
+if barstate.islast
+    table.clear(tb, 0, 0, 1, 4)
+    if showTable and actKind != ""
+        okCol = color.new(#089981, 0)
+        txCol = color.new(#131722, 0)
+        table.cell(tb, 0, 0, actTitle, text_color = okCol, text_size = size.small, text_halign = text.align_left)
+        table.merge_cells(tb, 0, 0, 1, 0)
+        table.cell(tb, 0, 1, st1n, text_color = txCol, text_size = size.small, text_halign = text.align_left)
+        table.cell(tb, 1, 1, st1v, text_color = okCol, text_size = size.small)
+        table.cell(tb, 0, 2, st2n, text_color = txCol, text_size = size.small, text_halign = text.align_left)
+        table.cell(tb, 1, 2, st2v, text_color = okCol, text_size = size.small)
+        table.cell(tb, 0, 3, "Projection", text_color = txCol, text_size = size.small, text_halign = text.align_left)
+        table.cell(tb, 1, 3, str.tostring(t1v, format.mintick) + " – " + str.tostring(t2v, format.mintick), text_color = okCol, text_size = size.small)
+        table.cell(tb, 0, 4, "Invalidation", text_color = txCol, text_size = size.small, text_halign = text.align_left)
+        table.cell(tb, 1, 4, invTxtv, text_color = color.new(invCol, 0), text_size = size.small)

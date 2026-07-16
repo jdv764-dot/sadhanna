@@ -14,9 +14,18 @@ A chart-overlay Elliott/NeoWave impulse counter, modeled on the StockLi wave-for
 - Optional **rule-check panel** (bottom right) showing W2 retrace %, W3 vs W1 ratio, W4 retrace %, overlap status, and the live Wave-5 projection.
 - Built-in **alerts**: new count detected, Wave-5 target reached, count invalidated.
 
-## Active Setups Only (`neowave-impulse-waves-active.pine`)
+## Active Setups (`neowave-active-setups.pine`)
 
-Same engine, but it shows **only live setups**: a count appears when waves 0–4 are confirmed and Wave 5 is still in progress, and everything is wiped from the chart the moment the setup resolves — Wave 5 confirms its pivot (completed) or price breaks the invalidation level (wrong). No stale or historical counts ever remain. Adds a fourth alert, "Setup completed", and the panel shows the invalidation level alongside the projection.
+Same engine, but it shows **only the setup that is live right now** — and it catches four stages, each with its own target zone and invalidation line:
+
+| Setup | Trigger | Target zone | Wrong when |
+| --- | --- | --- | --- |
+| **Wave 4** | Waves 0–3 confirmed, pullback unfolding | 0.382–0.50 retrace of W3 | Price enters Wave-1 territory |
+| **Wave 5** | Waves 0–4 confirmed | 0.618–1.0× W1 from the W4 pivot | Price re-enters Wave-1 territory |
+| **Wave B** | A 5-wave impulse completed and leg A confirmed | 0.382–0.618 retrace of A | Price takes out the correction origin |
+| **Wave C** | Legs A and B confirmed | 1.0–1.618× A from the B pivot | Price takes out the correction origin |
+
+Everything is wiped from the chart the moment a setup resolves (the next pivot confirms) or gets invalidated, so no stale counts ever remain — a blank chart means nothing qualifies right now. Each setup type can be toggled individually, all fib multiples are inputs, and four alerts are available: setup detected/updated, target reached, setup invalidated, setup resolved.
 
 ### Install
 
