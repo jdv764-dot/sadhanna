@@ -1,0 +1,305 @@
+// NeoWave Impulse Waves — ACTIVE SETUPS ONLY
+//
+// Variant of neowave-impulse-waves.pine that shows a count only while the
+// setup is live: waves 0-4 confirmed and wave 5 still in progress. As soon
+// as the setup resolves — wave 5 completes with a confirmed pivot, or the
+// count is invalidated (wave 4 territory breached) — every drawing is
+// removed and the chart stays clean until the next valid setup appears.
+//
+// How to use: TradingView → Pine Editor → paste this file → "Add to chart".
+
+//@version=6
+indicator("NeoWave Impulse Waves (Active)", "Active Impulse", overlay = true, max_lines_count = 100, max_labels_count = 100)
+
+// ─────────────────────────── Inputs ───────────────────────────
+grpD = "Detection"
+pivLen = input.int(6, "Pivot strength (bars each side)", minval = 2, maxval = 50, group = grpD, tooltip = "A swing high/low must be the extreme of this many bars on each side. Higher = fewer, larger waves.")
+bullOn = input.bool(true, "Detect bullish setups", group = grpD)
+bearOn = input.bool(true, "Detect bearish setups", group = grpD)
+fib1 = input.float(0.618, "Wave-5 target (x Wave 1)", step = 0.001, group = grpD)
+fib2 = input.float(1.000, "Wave-5 stretch (x Wave 1)", step = 0.001, group = grpD)
+
+grpS = "Style"
+waveCol = input.color(#2962ff, "Wave lines & numbers", group = grpS)
+tgtCol = input.color(#089981, "Target level", group = grpS)
+strCol = input.color(#787b86, "Stretch level", group = grpS)
+invCol = input.color(#9c27b0, "Invalidation level", group = grpS)
+showTable = input.bool(true, "Show setup panel", group = grpS)
+
+// ─────────────────────── Pivot bookkeeping ────────────────────
+var array<float> pP = array.new<float>() // pivot price
+var array<int>   pB = array.new<int>()   // pivot bar index
+var array<int>   pD = array.new<int>()   // +1 swing high, -1 swing low
+
+int MAXPIV = 60
+
+// Append a pivot, enforcing strict high/low alternation. If two pivots in a
+// row point the same way, keep the more extreme one. Returns true when the
+// pivot list changed (worth re-scanning for a setup).
+addPivot(float price, int b, int dir) =>
+    bool changed = false
+    n = array.size(pD)
+    if n > 0 and array.get(pD, n - 1) == dir
+        if (dir == 1 and price >= array.get(pP, n - 1)) or (dir == -1 and price <= array.get(pP, n - 1))
+            array.set(pP, n - 1, price)
+            array.set(pB, n - 1, b)
+            changed := true
+    else
+        array.push(pP, price)
+        array.push(pB, b)
+        array.push(pD, dir)
+        changed := true
+    if array.size(pD) > MAXPIV
+        array.shift(pP)
+        array.shift(pB)
+        array.shift(pD)
+    changed
+
+ph = ta.pivothigh(high, pivLen, pivLen)
+pl = ta.pivotlow(low, pivLen, pivLen)
+
+bool newPiv = false
+if not na(ph)
+    newPiv := addPivot(ph, bar_index - pivLen, 1) or newPiv
+if not na(pl)
+    newPiv := addPivot(pl, bar_index - pivLen, -1) or newPiv
+
+// ───────────────────────── Detection ──────────────────────────
+type Impulse
+    int   dir  // +1 bullish, -1 bearish
+    bool  done // true when wave 5 has a confirmed pivot (setup resolved)
+    float p0
+    int   b0
+    float p1
+    int   b1
+    float p2
+    int   b2
+    float p3
+    int   b3
+    float p4
+    int   b4
+
+// Scan the tail of the pivot list for an impulse in direction `up`.
+// Inviolable rules enforced on the developing structure:
+//   1. Wave 2 never retraces all of Wave 1
+//   2. Wave 4 stays out of Wave 1 territory (no overlap)
+// A `done` result means the active setup just resolved (wave-5 pivot
+// confirmed) and should be cleared from the chart.
+detect(int up) =>
+    Impulse imp = na
+    n = array.size(pD)
+    // Wave-5 pivot confirmed → setup resolved.
+    if n >= 6 and array.get(pD, n - 1) == up
+        f5 = array.get(pP, n - 1)
+        f4 = array.get(pP, n - 2)
+        f3 = array.get(pP, n - 3)
+        f2 = array.get(pP, n - 4)
+        f1 = array.get(pP, n - 5)
+        f0 = array.get(pP, n - 6)
+        w1 = (f1 - f0) * up
+        shape = w1 > 0 and (f1 - f2) * up > 0 and (f3 - f1) * up > 0 and (f3 - f4) * up > 0 and (f5 - f3) * up > 0
+        rule1 = (f2 - f0) * up > 0
+        rule4 = (f4 - f1) * up > 0
+        if shape and rule1 and rule4
+            imp := Impulse.new(up, true, f0, array.get(pB, n - 6), f1, array.get(pB, n - 5), f2, array.get(pB, n - 4), f3, array.get(pB, n - 3), f4, array.get(pB, n - 2))
+    // Active setup: waves 0-4 confirmed, wave 5 in progress.
+    if na(imp) and n >= 5 and array.get(pD, n - 1) == -up
+        f4 = array.get(pP, n - 1)
+        f3 = array.get(pP, n - 2)
+        f2 = array.get(pP, n - 3)
+        f1 = array.get(pP, n - 4)
+        f0 = array.get(pP, n - 5)
+        w1 = (f1 - f0) * up
+        shape = w1 > 0 and (f1 - f2) * up > 0 and (f3 - f1) * up > 0 and (f3 - f4) * up > 0
+        rule1 = (f2 - f0) * up > 0
+        rule4 = (f4 - f1) * up > 0
+        if shape and rule1 and rule4
+            imp := Impulse.new(up, false, f0, array.get(pB, n - 5), f1, array.get(pB, n - 4), f2, array.get(pB, n - 3), f3, array.get(pB, n - 2), f4, array.get(pB, n - 1))
+    imp
+
+// ─────────────────────── Drawing state ────────────────────────
+var array<line>  wLn = array.new<line>()
+var array<label> wLb = array.new<label>()
+var line  tgtLn = na
+var line  strLn = na
+var line  invLn = na
+var label tgtLb = na
+var label strLb = na
+var label invLb = na
+
+// Stats of the active setup (for the panel, level tracking and alerts).
+var int   actDir = 0 // 0 = no active setup on the chart
+var bool  tgtHitFlag = false
+var float s0 = na
+var float s1 = na
+var float s2 = na
+var float s3 = na
+var float s4 = na
+var float tgt1v = na
+var float tgt2v = na
+var float invLvl = na
+
+mkNum(int b, float p, string txt, bool below) =>
+    label.new(b, p, txt, style = below ? label.style_label_up : label.style_label_down, color = color.new(color.white, 100), textcolor = waveCol, size = size.normal)
+
+mkLvl(int b1, float y, color c, string sty) =>
+    line.new(b1, y, bar_index, y, color = c, style = sty, width = 1)
+
+mkTag(float y, string txt, color c) =>
+    label.new(bar_index, y, txt, style = label.style_label_left, color = color.new(c, 85), textcolor = c, size = size.small)
+
+// ─────────────────── Find & draw the setup ────────────────────
+Impulse cand = na
+if newPiv
+    Impulse cb = bullOn ? detect(1) : na
+    Impulse cr = bearOn ? detect(-1) : na
+    bool cbDone = false
+    if not na(cb)
+        cbDone := cb.done
+    bool crDone = false
+    if not na(cr)
+        crDone := cr.done
+    // A resolved wave 5 takes priority (it clears the setup); bullish wins a tie.
+    cand := cbDone ? cb : crDone ? cr : not na(cb) ? cb : cr
+
+bool candFound = not na(cand)
+bool newSetup = false
+bool setupCompleted = false
+
+if candFound
+    // Any change wipes the previous drawings first.
+    for l in wLn
+        line.delete(l)
+    array.clear(wLn)
+    for lb in wLb
+        label.delete(lb)
+    array.clear(wLb)
+    line.delete(tgtLn)
+    line.delete(strLn)
+    line.delete(invLn)
+    label.delete(tgtLb)
+    label.delete(strLb)
+    label.delete(invLb)
+    tgtLn := na
+    strLn := na
+    invLn := na
+    tgtLb := na
+    strLb := na
+    invLb := na
+
+    if cand.done
+        // Setup resolved — leave the chart clean.
+        setupCompleted := actDir != 0
+        actDir := 0
+        tgt1v := na
+        tgt2v := na
+        invLvl := na
+    else
+        newSetup := true
+        int up = cand.dir
+        array.push(wLn, line.new(cand.b0, cand.p0, cand.b1, cand.p1, color = waveCol, width = 2))
+        array.push(wLn, line.new(cand.b1, cand.p1, cand.b2, cand.p2, color = waveCol, width = 2))
+        array.push(wLn, line.new(cand.b2, cand.p2, cand.b3, cand.p3, color = waveCol, width = 2))
+        array.push(wLn, line.new(cand.b3, cand.p3, cand.b4, cand.p4, color = waveCol, width = 2))
+        array.push(wLb, mkNum(cand.b0, cand.p0, "⓪", up == 1))
+        array.push(wLb, mkNum(cand.b1, cand.p1, "①", up == -1))
+        array.push(wLb, mkNum(cand.b2, cand.p2, "②", up == 1))
+        array.push(wLb, mkNum(cand.b3, cand.p3, "③", up == -1))
+        array.push(wLb, mkNum(cand.b4, cand.p4, "④", up == 1))
+
+        actDir := up
+        tgtHitFlag := false
+        s0 := cand.p0
+        s1 := cand.p1
+        s2 := cand.p2
+        s3 := cand.p3
+        s4 := cand.p4
+
+        float wave1 = (cand.p1 - cand.p0) * up
+        tgt1v := cand.p4 + fib1 * wave1 * up
+        tgt2v := cand.p4 + fib2 * wave1 * up
+        invLvl := cand.p1
+        tgtLn := mkLvl(cand.b4, tgt1v, tgtCol, line.style_dotted)
+        strLn := mkLvl(cand.b4, tgt2v, strCol, line.style_dotted)
+        invLn := mkLvl(cand.b1, invLvl, invCol, line.style_dashed)
+        tgtLb := mkTag(tgt1v, "⑤? Target " + str.tostring(tgt1v, format.mintick), tgtCol)
+        strLb := mkTag(tgt2v, "Stretch " + str.tostring(tgt2v, format.mintick), strCol)
+        invLb := mkTag(invLvl, (up == 1 ? "Wrong below " : "Wrong above ") + str.tostring(invLvl, format.mintick), invCol)
+
+// ─────────────── Live target / invalidation checks ────────────
+bool justInvalid = false
+bool justHitTarget = false
+if actDir != 0
+    if actDir == 1 ? close < invLvl : close > invLvl
+        // Count is wrong — remove the setup from the chart entirely.
+        justInvalid := true
+        actDir := 0
+        for l in wLn
+            line.delete(l)
+        array.clear(wLn)
+        for lb in wLb
+            label.delete(lb)
+        array.clear(wLb)
+        line.delete(tgtLn)
+        line.delete(strLn)
+        line.delete(invLn)
+        label.delete(tgtLb)
+        label.delete(strLb)
+        label.delete(invLb)
+        tgtLn := na
+        strLn := na
+        invLn := na
+        tgtLb := na
+        strLb := na
+        invLb := na
+        tgt1v := na
+        tgt2v := na
+        invLvl := na
+    else if not tgtHitFlag
+        if actDir == 1 ? high >= tgt1v : low <= tgt1v
+            justHitTarget := true
+            tgtHitFlag := true
+
+// Keep the projected levels pinned to the right edge of the chart.
+if not na(tgtLn)
+    line.set_x2(tgtLn, bar_index)
+    label.set_x(tgtLb, bar_index)
+if not na(strLn)
+    line.set_x2(strLn, bar_index)
+    label.set_x(strLb, bar_index)
+if not na(invLn)
+    line.set_x2(invLn, bar_index)
+    label.set_x(invLb, bar_index)
+
+alertcondition(newSetup, "New active setup", "Active Impulse: a new wave-5 setup is live (waves 0-4 confirmed).")
+alertcondition(justHitTarget, "Wave-5 target reached", "Active Impulse: price reached the wave-5 target zone.")
+alertcondition(justInvalid, "Setup invalidated", "Active Impulse: the setup was invalidated and removed (wave-4 entered wave-1 territory).")
+alertcondition(setupCompleted, "Setup completed", "Active Impulse: wave 5 confirmed a pivot — setup resolved and cleared.")
+
+// ───────────────────── Active-setup panel ─────────────────────
+var table tb = table.new(position.bottom_right, 2, 7, bgcolor = color.new(color.white, 10), border_width = 1, border_color = color.new(color.gray, 80), frame_width = 1, frame_color = color.new(color.gray, 60))
+
+if barstate.islast
+    table.clear(tb, 0, 0, 1, 6)
+    if showTable and actDir != 0
+        okCol = color.new(#089981, 0)
+        txCol = color.new(#131722, 0)
+        w1len = math.abs(s1 - s0)
+        w3len = math.abs(s3 - s2)
+        w2ret = w1len > 0 ? math.abs(s1 - s2) / w1len : na
+        w4ret = w3len > 0 ? math.abs(s3 - s4) / w3len : na
+        r31 = w1len > 0 ? w3len / w1len : na
+        table.cell(tb, 0, 0, "ACTIVE " + (actDir == 1 ? "BULLISH" : "BEARISH") + " SETUP — WAVE 5 IN PROGRESS", text_color = okCol, text_size = size.small, text_halign = text.align_left)
+        table.merge_cells(tb, 0, 0, 1, 0)
+        table.cell(tb, 0, 1, "W2 retrace of W1", text_color = txCol, text_size = size.small, text_halign = text.align_left)
+        table.cell(tb, 1, 1, str.tostring(w2ret * 100, "#") + "%  ✓", text_color = okCol, text_size = size.small)
+        table.cell(tb, 0, 2, "W3 vs W1", text_color = txCol, text_size = size.small, text_halign = text.align_left)
+        table.cell(tb, 1, 2, str.tostring(r31, "#.##") + "×  ✓", text_color = okCol, text_size = size.small)
+        table.cell(tb, 0, 3, "W4 retrace of W3", text_color = txCol, text_size = size.small, text_halign = text.align_left)
+        table.cell(tb, 1, 3, str.tostring(w4ret * 100, "#") + "%  ✓", text_color = okCol, text_size = size.small)
+        table.cell(tb, 0, 4, "W4 / W1 overlap", text_color = txCol, text_size = size.small, text_halign = text.align_left)
+        table.cell(tb, 1, 4, "none ✓", text_color = okCol, text_size = size.small)
+        table.cell(tb, 0, 5, "Wave-5 projection", text_color = txCol, text_size = size.small, text_halign = text.align_left)
+        table.cell(tb, 1, 5, str.tostring(tgt1v, format.mintick) + " – " + str.tostring(tgt2v, format.mintick), text_color = okCol, text_size = size.small)
+        table.cell(tb, 0, 6, "Invalidation", text_color = txCol, text_size = size.small, text_halign = text.align_left)
+        table.cell(tb, 1, 6, (actDir == 1 ? "below " : "above ") + str.tostring(invLvl, format.mintick), text_color = color.new(invCol, 0), text_size = size.small)

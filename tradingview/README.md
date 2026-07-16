@@ -14,6 +14,10 @@ A chart-overlay Elliott/NeoWave impulse counter, modeled on the StockLi wave-for
 - Optional **rule-check panel** (bottom right) showing W2 retrace %, W3 vs W1 ratio, W4 retrace %, overlap status, and the live Wave-5 projection.
 - Built-in **alerts**: new count detected, Wave-5 target reached, count invalidated.
 
+## Active Setups Only (`neowave-impulse-waves-active.pine`)
+
+Same engine, but it shows **only live setups**: a count appears when waves 0–4 are confirmed and Wave 5 is still in progress, and everything is wiped from the chart the moment the setup resolves — Wave 5 confirms its pivot (completed) or price breaks the invalidation level (wrong). No stale or historical counts ever remain. Adds a fourth alert, "Setup completed", and the panel shows the invalidation level alongside the projection.
+
 ### Install
 
 1. Open any chart on [TradingView](https://www.tradingview.com) and open the **Pine Editor** (bottom panel).
