@@ -34,8 +34,13 @@ poleMaxBars  = input.int(30,    "Max pole duration (bars)",                    m
 
 grpFlag      = "Flag validation"
 maxRetrace   = input.float(0.5, "Max pole retracement by first low (B)",       minval = 0.1, maxval = 1.0, step = 0.05, group = grpFlag)
-flagMaxBars  = input.int(40,    "Max flag duration (bars)",                    minval = 5,   group = grpFlag)
+flagMaxBars  = input.int(25,    "Max flag duration (bars)",                    minval = 5,   group = grpFlag)
 useVolFilter = input.bool(true, "Require flag volume < pole volume (Murphy)",  group = grpFlag)
+
+grpFilt      = "Entry filter / housekeeping"
+useTrendFlt  = input.bool(true, "Require close above trend EMA to enter",      group = grpFilt)
+trendLen     = input.int(50,    "Trend EMA length",                            minval = 5, group = grpFilt)
+keepOld      = input.bool(true, "Keep drawings of setups that never filled",   group = grpFilt)
 
 grpFib       = "Trend-based fib extension of corrective swing (A→B→C)"
 entryRatio   = input.float(1.0,   "Entry extension",                           step = 0.001, group = grpFib)
@@ -87,7 +92,8 @@ var line stopLn   = na
 var line targetLn = na
 var line flagLn   = na
 
-atr   = ta.atr(atrLen)
+atr      = ta.atr(atrLen)
+trendEma = ta.ema(close, trendLen)
 ph    = ta.pivothigh(high, pivLen, pivLen)
 pl    = ta.pivotlow(low, pivLen, pivLen)
 phOk  = not na(ph)
@@ -220,7 +226,7 @@ else if state == WAIT_C
         eEntry = provC - entryRatio * eSwing
         eStop  = provC - stopRatio  * eSwing
         eTgt   = aHigh - targetRatio * (aHigh - poleLow)
-        if low <= eEntry + entryTolAtr * atr and close > eStop and eStop > poleLow - atr
+        if low <= eEntry + entryTolAtr * atr and close > eStop and eStop > poleLow - atr and (not useTrendFlt or close > trendEma)
             cHigh     := provC
             cBar      := bar_index
             entryLvl  := eEntry
@@ -238,21 +244,36 @@ else if state == WAIT_C
 // ── ARMED: wait for price to tag the 1.0-extension buy zone ───────────────
 else if state == ARMED
     extendActiveLines()
+    bool cancel = false
     if close > aHigh
         label.new(bar_index, high, "Breakout — no fill", style = label.style_label_down, color = color.new(colFlag, 60), textcolor = chart.fg_color, size = size.small)
-        state  := SCAN
-        lastPl := na
+        cancel := true
     else if close < stopLvl
         label.new(bar_index, low, "Setup invalidated", style = label.style_label_up, color = color.new(colStop, 60), textcolor = colStop, size = size.small)
-        state  := SCAN
-        lastPl := na
+        cancel := true
     else if bar_index - cBar > flagMaxBars
+        label.new(bar_index, high, "Setup expired (flag too old)", style = label.style_label_down, color = color.new(colFlag, 60), textcolor = chart.fg_color, size = size.small)
+        cancel := true
+    else if low <= entryLvl + entryTolAtr * atr
+        if useTrendFlt and close < trendEma
+            label.new(bar_index, low, "No entry — below trend EMA", style = label.style_label_up, color = color.new(colStop, 60), textcolor = colStop, size = size.small)
+            cancel := true
+        else
+            buySignal := true
+            state     := LONG
+            label.new(bar_index, low, "BUY " + str.tostring(entryLvl, format.mintick), style = label.style_label_up, color = colEntry, textcolor = color.white)
+    if cancel
         state  := SCAN
         lastPl := na
-    else if low <= entryLvl + entryTolAtr * atr
-        buySignal := true
-        state     := LONG
-        label.new(bar_index, low, "BUY " + str.tostring(entryLvl, format.mintick), style = label.style_label_up, color = colEntry, textcolor = color.white)
+        if not keepOld
+            line.delete(entryLn)
+            line.delete(stopLn)
+            line.delete(targetLn)
+            line.delete(flagLn)
+        entryLn  := na
+        stopLn   := na
+        targetLn := na
+        flagLn   := na
 
 // ── LONG: manage the hypothetical position ─────────────────────────────────
 else if state == LONG
@@ -278,6 +299,7 @@ float provStopLvl  = state == WAIT_C ? provC - stopRatio  * (aHigh - bLow) : na
 float provTgtLvl   = formingFlag ? aHigh - targetRatio * (aHigh - poleLow) : na
 float provFloor    = formingFlag ? aHigh - maxRetrace * (aHigh - poleLow) : na
 
+plot(useTrendFlt ? trendEma : na, "Trend EMA (entry filter)", color.new(colFlag, 80), 1)
 plot(showForming and formingFlag ? aHigh : na, "Flag high (forming)",  color.new(colFlag, 30),   1, plot.style_linebr)
 plot(showForming ? provFloor : na,             "Max B retrace floor",  color.new(colFlag, 70),   1, plot.style_linebr)
 plot(showForming ? provEntryLvl : na,          "Entry (provisional)",  color.new(colEntry, 40),  1, plot.style_linebr)

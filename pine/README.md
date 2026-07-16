@@ -123,6 +123,23 @@ The indicator runs a small state machine on confirmed pivots
 | Entry / stop extensions | 1.0 / 1.618 | The requested trade plan; adjustable |
 | Pole fib level for target | −0.236 | More aggressive: −0.618 or −1.0 (full measured move) |
 
+## Reading the chart / troubleshooting
+
+- **Old entry/stop lines with the table saying "Scanning"** = a *finished*
+  setup, not a live one. Every setup now ends with an outcome label at its
+  last bar: `BUY` → `TARGET`/`STOPPED`, or `Breakout — no fill`,
+  `Setup invalidated`, `Setup expired (flag too old)`,
+  `No entry — below trend EMA`. If you'd rather not keep the lines of
+  setups that never filled, turn off *"Keep drawings of setups that never
+  filled"*.
+- **Trend EMA entry filter** (default on, EMA-50): a buy-zone touch that
+  happens with price below the trend EMA is refused and the setup is
+  cancelled — flags are continuation patterns, and a tag of the zone deep
+  inside a breakdown is a falling knife, not a pullback.
+- **Flag duration**: default max is 25 bars. Murphy's flags last one to
+  three weeks, so on a daily chart consider 10–15; on intraday charts the
+  bar count matters more than the wall-clock time.
+
 ## Disclaimer
 
 Educational tooling only — not financial advice. Pattern detection on
