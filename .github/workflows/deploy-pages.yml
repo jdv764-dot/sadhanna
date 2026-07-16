@@ -6,9 +6,11 @@ on:
       - main
       - claude/she-comes-first-app-q3o95v
       - claude/iphone-christianity-app-54ri1n
+      - claude/checklist-iphone-app-uf6z6u
     paths:
       - "she-comes-first/**"
       - "foundations/**"
+      - "checklist/**"
       - ".github/workflows/deploy-pages.yml"
   workflow_dispatch:
 
@@ -41,6 +43,7 @@ jobs:
           mkdir -p dist
           cp -r she-comes-first/. dist/
           cp -r foundations dist/foundations
+          cp -r checklist dist/checklist
 
       - name: Upload site
         uses: actions/upload-pages-artifact@v3
