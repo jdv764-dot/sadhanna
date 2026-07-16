@@ -45,6 +45,11 @@ entryTolAtr  = input.float(0.25,  "Entry touch tolerance (ATR)",               m
 grpTgt       = "Target"
 targetRatio  = input.float(-0.236, "Pole fib level for target (−0.236 = above pole high)", step = 0.001, group = grpTgt)
 
+grpAnt       = "Anticipation / live setups"
+showForming  = input.bool(true,  "Show provisional levels while the flag is forming",        group = grpAnt)
+allowEarly   = input.bool(false, "Allow early entry on provisional levels (C unconfirmed)",  group = grpAnt)
+showStatus   = input.bool(true,  "Show status table",                                       group = grpAnt)
+
 grpStyle     = "Style"
 showZigzag   = input.bool(true, "Draw pole and A-B-C swing lines",             group = grpStyle)
 colEntry     = input.color(color.new(color.green, 0),  "Entry",               group = grpStyle)
@@ -72,6 +77,7 @@ var float bLow       = na   // B: first corrective low
 var int   bBar       = na
 var float cHigh      = na   // C: reaction high
 var int   cBar       = na
+var float provC      = na   // developing (unconfirmed) reaction high while waiting for C
 var float entryLvl   = na
 var float stopLvl    = na
 var float targetLvl  = na
@@ -88,6 +94,8 @@ phOk  = not na(ph)
 plOk  = not na(pl)
 pivBar = bar_index - pivLen
 
+bool poleFound  = false
+bool bConfirmed = false
 bool setupArmed = false
 bool buySignal  = false
 bool stopHit    = false
@@ -125,6 +133,7 @@ if state == SCAN
             aHigh      := ph
             aBar       := pivBar
             state      := WAIT_B
+            poleFound  := true
 
 // ── WAIT_B: first corrective pivot low inside the flag ────────────────────
 else if state == WAIT_B
@@ -140,6 +149,12 @@ else if state == WAIT_B
             bLow  := pl
             bBar  := pivBar
             state := WAIT_C
+            bConfirmed := true
+            // seed the developing reaction high from the bars already printed after B
+            provC := bLow
+            for off = 0 to bar_index - bBar - 1
+                provC := math.max(provC, high[off])
+            provC := math.min(provC, aHigh)
         else
             state     := SCAN
             lastPl    := pl
@@ -147,14 +162,17 @@ else if state == WAIT_B
 
 // ── WAIT_C: reaction high (lower high) completes the A→B→C structure ──────
 else if state == WAIT_C
+    provC := math.min(math.max(provC, high), aHigh)   // developing reaction high
     if close > aHigh
         // broke out before a tradeable pullback structure formed
         state  := SCAN
         lastPl := na
+        provC  := na
     else if close < bLow - (aHigh - bLow) or bar_index - aBar > flagMaxBars
         // collapsed a full swing below B (or stalled too long) — not a flag
         state  := SCAN
         lastPl := na
+        provC  := na
     else if phOk and pivBar > bBar and ph < aHigh and ph > bLow
         swing = aHigh - bLow
         eLvl  = ph - entryRatio  * swing        // 1.0   trend-based fib extension
@@ -175,6 +193,7 @@ else if state == WAIT_C
             targetLvl := tLvl
             state     := ARMED
             setupArmed := true
+            provC     := na
 
             if showZigzag
                 line.new(poleLowBar, poleLow, aBar, aHigh, color = colFlag, width = 2)
@@ -194,6 +213,27 @@ else if state == WAIT_C
         else
             state  := SCAN
             lastPl := na
+            provC  := na
+    else if allowEarly and not na(provC) and provC > bLow
+        // early entry: treat the developing reaction high as C before it confirms
+        eSwing = aHigh - bLow
+        eEntry = provC - entryRatio * eSwing
+        eStop  = provC - stopRatio  * eSwing
+        eTgt   = aHigh - targetRatio * (aHigh - poleLow)
+        if low <= eEntry + entryTolAtr * atr and close > eStop and eStop > poleLow - atr
+            cHigh     := provC
+            cBar      := bar_index
+            entryLvl  := eEntry
+            stopLvl   := eStop
+            targetLvl := eTgt
+            provC     := na
+            state     := LONG
+            buySignal := true
+            flagLn   := line.new(aBar, aHigh, bar_index, aHigh, color = colFlag, style = line.style_dotted)
+            entryLn  := line.new(bar_index, eEntry, bar_index, eEntry, color = colEntry, width = 2)
+            stopLn   := line.new(bar_index, eStop, bar_index, eStop, color = colStop, width = 2)
+            targetLn := line.new(bar_index, eTgt, bar_index, eTgt, color = colTarget, width = 2)
+            label.new(bar_index, low, "BUY (early) " + str.tostring(eEntry, format.mintick), style = label.style_label_up, color = colEntry, textcolor = color.white)
 
 // ── ARMED: wait for price to tag the 1.0-extension buy zone ───────────────
 else if state == ARMED
@@ -228,11 +268,53 @@ else if state == LONG
         state  := SCAN
         lastPl := na
 
+// ── Provisional (forming) levels — the "future setup" view ────────────────
+// While the flag is still building, project the levels live: during WAIT_C
+// the developing reaction high (provC) stands in for C, so the entry/stop
+// update in real time and you can see the setup coming before it confirms.
+bool  formingFlag  = state == WAIT_B or state == WAIT_C
+float provEntryLvl = state == WAIT_C ? provC - entryRatio * (aHigh - bLow) : na
+float provStopLvl  = state == WAIT_C ? provC - stopRatio  * (aHigh - bLow) : na
+float provTgtLvl   = formingFlag ? aHigh - targetRatio * (aHigh - poleLow) : na
+float provFloor    = formingFlag ? aHigh - maxRetrace * (aHigh - poleLow) : na
+
+plot(showForming and formingFlag ? aHigh : na, "Flag high (forming)",  color.new(colFlag, 30),   1, plot.style_linebr)
+plot(showForming ? provFloor : na,             "Max B retrace floor",  color.new(colFlag, 70),   1, plot.style_linebr)
+plot(showForming ? provEntryLvl : na,          "Entry (provisional)",  color.new(colEntry, 40),  1, plot.style_linebr)
+plot(showForming ? provStopLvl : na,           "Stop (provisional)",   color.new(colStop, 40),   1, plot.style_linebr)
+plot(showForming ? provTgtLvl : na,            "Target (provisional)", color.new(colTarget, 40), 1, plot.style_linebr)
+
+// ── Status table ───────────────────────────────────────────────────────────
+lvlTxt(float confirmed, float provisional) =>
+    state == ARMED or state == LONG ? str.tostring(confirmed, format.mintick) :
+         not na(provisional) ? "~" + str.tostring(provisional, format.mintick) : "—"
+
+if showStatus and barstate.islast
+    var table st = table.new(position.top_right, 2, 5, bgcolor = color.new(chart.bg_color, 15),
+         border_width = 1, border_color = color.new(colFlag, 70))
+    stateTxt = state == SCAN ? "Scanning for flagpole" :
+         state == WAIT_B ? "Pole found — waiting for corrective low (B)" :
+         state == WAIT_C ? "B set — levels projecting (C forming)" :
+         state == ARMED  ? "ARMED — waiting for buy zone" : "LONG — managing stop / target"
+    stateCol = state == ARMED ? colEntry : state == LONG ? colTarget : chart.fg_color
+    table.cell(st, 0, 0, "State",  text_color = chart.fg_color, text_size = size.small, text_halign = text.align_left)
+    table.cell(st, 1, 0, stateTxt, text_color = stateCol,       text_size = size.small, text_halign = text.align_left)
+    table.cell(st, 0, 1, "Flag high (A)", text_color = chart.fg_color, text_size = size.small, text_halign = text.align_left)
+    table.cell(st, 1, 1, state != SCAN ? str.tostring(aHigh, format.mintick) : "—", text_color = chart.fg_color, text_size = size.small, text_halign = text.align_left)
+    table.cell(st, 0, 2, "Entry (" + str.tostring(entryRatio) + " ext)", text_color = chart.fg_color, text_size = size.small, text_halign = text.align_left)
+    table.cell(st, 1, 2, lvlTxt(entryLvl, provEntryLvl), text_color = colEntry, text_size = size.small, text_halign = text.align_left)
+    table.cell(st, 0, 3, "Stop (" + str.tostring(stopRatio) + " ext)", text_color = chart.fg_color, text_size = size.small, text_halign = text.align_left)
+    table.cell(st, 1, 3, lvlTxt(stopLvl, provStopLvl), text_color = colStop, text_size = size.small, text_halign = text.align_left)
+    table.cell(st, 0, 4, "Target (" + str.tostring(targetRatio) + " pole)", text_color = chart.fg_color, text_size = size.small, text_halign = text.align_left)
+    table.cell(st, 1, 4, lvlTxt(targetLvl, provTgtLvl), text_color = colTarget, text_size = size.small, text_halign = text.align_left)
+
 // ── Plots & alerts ─────────────────────────────────────────────────────────
 plotshape(buySignal, "Buy", shape.triangleup, location.belowbar, colEntry, size = size.small)
 plotshape(stopHit,   "Stop hit", shape.xcross, location.belowbar, colStop, size = size.tiny)
 plotshape(targetHit, "Target hit", shape.flag, location.abovebar, colTarget, size = size.tiny)
 
+alertcondition(poleFound,  "Bull flag pole detected",  "Sharp impulse leg confirmed — watching for a bull flag to form above the pole base.")
+alertcondition(bConfirmed, "Corrective low confirmed", "First corrective swing (A→B) set — provisional fib extension levels now projecting.")
 alertcondition(setupArmed, "Bull flag armed",   "Bull flag A-B-C complete — fib extension levels projected. Watch the 1.0-extension buy zone.")
 alertcondition(buySignal,  "Bull flag buy",     "Price tagged the 1.0 trend-based fib extension inside a bull flag — buy zone hit.")
 alertcondition(stopHit,    "Bull flag stopped", "Close below the 1.618 fib extension — bull flag trade stopped out.")

@@ -61,6 +61,33 @@ lower channel line is typically tagged. A decisive close beyond the 1.618
 extension means the "correction" has grown too large to be a flag, so the
 stop sits just below it.
 
+## Catching setups as they form (not just after the fact)
+
+Pivot-based detection normally confirms swings only `Pivot length` bars
+later, so a setup would first appear when it is nearly complete. The
+**Anticipation / live setups** inputs surface the setup *while it is still
+building*:
+
+- **Show provisional levels while the flag is forming** (default on) — as
+  soon as the pole is detected, the flag high and the maximum-retracement
+  floor for B are plotted forward. Once B confirms, the script tracks the
+  *developing* reaction high as a stand-in for C and projects live,
+  bar-by-bar provisional entry/stop/target lines (faded colors). They firm
+  up into the final levels the moment C confirms.
+- **Status table** (default on, top-right) — shows the current state
+  ("Scanning", "Pole found — waiting for B", "B set — levels projecting",
+  "ARMED", "LONG") plus the live level values (`~` prefix = provisional).
+- **Early alerts** — *"Bull flag pole detected"* and *"Corrective low
+  confirmed"* fire at the earliest stages, so you can watch a candidate
+  before it arms.
+- **Allow early entry on provisional levels** (default **off**) — lets the
+  buy trigger fire from the provisional 1.0 extension before C is a
+  confirmed pivot. This catches fast flags that tag the extension within
+  the pivot-confirmation window, at the cost of occasionally entering
+  against a C that would never have confirmed. The provisional levels are
+  live-updating (they ratchet up as the reaction high extends) but nothing
+  repaints — history shows exactly what was known on each bar.
+
 ## Signal lifecycle
 
 The indicator runs a small state machine on confirmed pivots
