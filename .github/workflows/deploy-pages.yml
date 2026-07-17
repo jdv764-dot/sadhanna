@@ -7,10 +7,12 @@ on:
       - claude/she-comes-first-app-q3o95v
       - claude/iphone-christianity-app-54ri1n
       - claude/checklist-iphone-app-uf6z6u
+      - claude/massage-app-techniques-a5h75y
     paths:
       - "she-comes-first/**"
       - "foundations/**"
       - "checklist/**"
+      - "massage/**"
       - ".github/workflows/deploy-pages.yml"
   workflow_dispatch:
 
@@ -44,6 +46,7 @@ jobs:
           cp -r she-comes-first/. dist/
           cp -r foundations dist/foundations
           cp -r checklist dist/checklist
+          cp -r massage dist/massage
 
       - name: Upload site
         uses: actions/upload-pages-artifact@v3

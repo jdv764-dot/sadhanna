@@ -1,0 +1,14 @@
+{
+  "name": "Kneaded — partner massage practice",
+  "short_name": "Kneaded",
+  "description": "Learn and practice Eastern and Western massage techniques on your partner — guided routines, a technique library, and a practice log with feedback.",
+  "start_url": ".",
+  "scope": ".",
+  "display": "standalone",
+  "background_color": "#f6f1ea",
+  "theme_color": "#f6f1ea",
+  "icons": [
+    { "src": "icon-180.png", "sizes": "180x180", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}

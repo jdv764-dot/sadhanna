@@ -1,0 +1,1217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no" />
+<title>Kneaded</title>
+<meta name="description" content="Learn and practice Eastern and Western massage techniques on your partner — guided routines, a technique library, and a practice log with feedback." />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="default" />
+<meta name="apple-mobile-web-app-title" content="Kneaded" />
+<meta name="theme-color" content="#f6f1ea" />
+<link rel="manifest" href="manifest.webmanifest" />
+<link rel="apple-touch-icon" href="icon-180.png" />
+<link rel="icon" type="image/png" href="icon-180.png" />
+<style>
+  :root {
+    --bg: #f6f1ea;
+    --surface: #fffdf9;
+    --surface-2: #efe8dd;
+    --line: #e5dccd;
+    --ink: #2b2620;
+    --muted: #8a7f6e;
+    --east: #b0562f;
+    --east-soft: #f5e0d5;
+    --west: #31656d;
+    --west-soft: #dcebe9;
+    --gold: #9c7a30;
+    --gold-soft: #f1e7cf;
+    --green: #3c7a52;
+    --green-soft: #dfeee4;
+    --red: #b23a3a;
+    --red-soft: #f3dcdc;
+    --sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
+    --serif: ui-serif, "New York", Georgia, serif;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; }
+  body {
+    background: var(--bg); color: var(--ink); font-family: var(--sans);
+    line-height: 1.55; overscroll-behavior-y: none; -webkit-font-smoothing: antialiased;
+  }
+  #app {
+    max-width: 640px; margin: 0 auto; min-height: 100%;
+    padding: calc(env(safe-area-inset-top) + 18px) 18px calc(env(safe-area-inset-bottom) + 96px);
+  }
+  header.appbar { margin-bottom: 14px; }
+  .appbar h1 { font-family: var(--serif); font-size: 27px; letter-spacing: 0.2px; }
+  .appbar h1 em { font-style: normal; color: var(--east); }
+  .appbar p { color: var(--muted); font-size: 13.5px; margin-top: 1px; }
+
+  .card {
+    background: var(--surface); border: 1px solid var(--line); border-radius: 16px;
+    padding: 15px 16px; margin-bottom: 12px; box-shadow: 0 1px 2px rgba(43, 38, 32, 0.05);
+  }
+  .card.tappable { cursor: pointer; }
+  .card.tappable:active { background: var(--surface-2); }
+  .card h2 { font-family: var(--serif); font-size: 19px; line-height: 1.3; margin: 4px 0 2px; }
+  .card .meta { color: var(--muted); font-size: 13px; }
+
+  .badge {
+    display: inline-block; font-size: 10.5px; font-weight: 700; letter-spacing: 0.9px;
+    text-transform: uppercase; padding: 2px 8px; border-radius: 20px; margin-right: 5px;
+  }
+  .badge.east { background: var(--east-soft); color: var(--east); }
+  .badge.west { background: var(--west-soft); color: var(--west); }
+  .badge.neutral { background: var(--surface-2); color: var(--muted); }
+  .badge.green { background: var(--green-soft); color: var(--green); }
+  .badge.gold { background: var(--gold-soft); color: var(--gold); }
+
+  .dots { color: var(--east); letter-spacing: 2px; font-size: 12px; }
+  .dots .off { color: var(--line); }
+
+  .chips { display: flex; gap: 8px; margin: 2px 0 14px; overflow-x: auto; padding-bottom: 4px; }
+  .chip {
+    border: 1px solid var(--line); background: var(--surface); color: var(--muted);
+    border-radius: 20px; padding: 7px 14px; font-size: 13.5px; font-weight: 600;
+    cursor: pointer; white-space: nowrap; font-family: var(--sans);
+  }
+  .chip.on { background: var(--ink); border-color: var(--ink); color: #fff; }
+
+  .btn {
+    display: block; width: 100%; border: none; border-radius: 14px;
+    padding: 14px 16px; font-size: 16px; font-weight: 600; cursor: pointer; font-family: var(--sans);
+  }
+  .btn:active { opacity: 0.85; }
+  .btn.primary { background: var(--ink); color: #fff; }
+  .btn.east { background: var(--east); color: #fff; }
+  .btn.subtle { background: var(--surface-2); color: var(--ink); }
+  .btn.ghost { background: transparent; border: 1.5px dashed var(--line); color: var(--muted); }
+  .btn.small { width: auto; display: inline-block; padding: 9px 14px; font-size: 14px; border-radius: 11px; }
+  .btn + .btn { margin-top: 10px; }
+  .btnrow { display: flex; gap: 10px; }
+  .btnrow .btn { margin-top: 0; flex: 1; }
+
+  .back {
+    border: none; background: transparent; color: var(--muted); font-size: 15px;
+    font-weight: 600; cursor: pointer; padding: 4px 0; margin-bottom: 8px; font-family: var(--sans);
+  }
+
+  .section-title {
+    font-size: 12px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;
+    color: var(--muted); margin: 20px 0 8px;
+  }
+
+  ol.steps { margin: 8px 0 4px 0; padding-left: 0; list-style: none; counter-reset: st; }
+  ol.steps li {
+    counter-increment: st; position: relative; padding: 0 0 12px 38px; font-size: 15px;
+  }
+  ol.steps li::before {
+    content: counter(st); position: absolute; left: 0; top: 1px;
+    width: 26px; height: 26px; border-radius: 50%; background: var(--surface-2);
+    color: var(--ink); font-size: 13px; font-weight: 700; display: flex;
+    align-items: center; justify-content: center;
+  }
+  ul.plain { padding-left: 18px; font-size: 15px; }
+  ul.plain li { margin-bottom: 7px; }
+
+  .callout { border-radius: 12px; padding: 11px 13px; font-size: 14px; margin-top: 10px; }
+  .callout.warn { background: var(--red-soft); color: #7c2a2a; }
+  .callout.tip { background: var(--gold-soft); color: #6e5620; }
+
+  .empty { text-align: center; color: var(--muted); padding: 36px 20px; }
+  .empty .big { font-size: 40px; margin-bottom: 8px; }
+  .empty h3 { color: var(--ink); font-size: 17px; margin-bottom: 4px; }
+  .empty p { font-size: 14px; }
+
+  /* stats */
+  .statrow { display: flex; gap: 10px; margin-bottom: 12px; }
+  .stat {
+    flex: 1; background: var(--surface); border: 1px solid var(--line); border-radius: 14px;
+    padding: 12px 8px; text-align: center;
+  }
+  .stat b { display: block; font-family: var(--serif); font-size: 22px; }
+  .stat span { font-size: 11.5px; color: var(--muted); letter-spacing: 0.4px; text-transform: uppercase; font-weight: 600; }
+
+  /* forms */
+  label.fieldlabel {
+    display: block; font-size: 12px; font-weight: 700; letter-spacing: 0.8px;
+    text-transform: uppercase; color: var(--muted); margin: 16px 0 6px;
+  }
+  input[type=text], input[type=number], textarea {
+    width: 100%; border: 1px solid var(--line); border-radius: 12px; background: var(--surface);
+    padding: 12px 13px; font-size: 16px; font-family: var(--sans); color: var(--ink); outline: none;
+  }
+  input:focus, textarea:focus { border-color: var(--ink); }
+  .seg { display: flex; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; background: var(--surface); }
+  .seg button {
+    flex: 1; border: none; background: transparent; padding: 11px 4px; font-size: 14px;
+    font-weight: 600; color: var(--muted); cursor: pointer; font-family: var(--sans);
+  }
+  .seg button.on { background: var(--ink); color: #fff; }
+
+  /* runner */
+  .runner { text-align: center; padding-top: 8vh; }
+  .runner .stepno { color: var(--muted); font-size: 13px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; }
+  .runner h2 { font-family: var(--serif); font-size: 28px; margin: 8px 0 6px; line-height: 1.25; }
+  .runner .cue { color: var(--muted); font-size: 15.5px; max-width: 460px; margin: 0 auto 18px; }
+  .clock { font-variant-numeric: tabular-nums; font-family: var(--serif); font-size: 64px; letter-spacing: 1px; margin: 6px 0 4px; }
+  .clock.paused { color: var(--muted); }
+  .runbar { height: 6px; border-radius: 3px; background: var(--surface-2); margin: 16px auto 26px; max-width: 420px; overflow: hidden; }
+  .runbar i { display: block; height: 100%; background: var(--east); border-radius: 3px; transition: width 0.5s linear; }
+  .runctl { display: flex; gap: 10px; max-width: 420px; margin: 0 auto; }
+  .runctl .btn { flex: 1; margin: 0; }
+
+  /* rating hearts */
+  .hearts { display: flex; gap: 8px; }
+  .hearts button {
+    flex: 1; font-size: 24px; padding: 8px 0; border: 1px solid var(--line); border-radius: 12px;
+    background: var(--surface); cursor: pointer; color: var(--line);
+  }
+  .hearts button.on { color: var(--east); border-color: var(--east-soft); background: var(--east-soft); }
+
+  /* body map */
+  .bodymap { display: block; margin: 0 auto 6px; width: 100%; max-width: 280px; }
+  .bodymap .zone { fill: #ebe2d3; stroke: #d9cdb8; stroke-width: 1.5; cursor: pointer; transition: fill 0.15s; }
+  .bodymap .zone.sel { fill: var(--east-soft); stroke: var(--east); stroke-width: 2; }
+
+  /* bottom nav */
+  nav.tabs {
+    position: fixed; bottom: 0; left: 0; right: 0; z-index: 10;
+    background: rgba(255, 253, 249, 0.94); backdrop-filter: blur(10px);
+    border-top: 1px solid var(--line); display: flex;
+    padding: 6px 8px calc(env(safe-area-inset-bottom) + 6px);
+  }
+  nav.tabs button {
+    flex: 1; border: none; background: transparent; cursor: pointer; color: var(--muted);
+    font-family: var(--sans); font-size: 11px; font-weight: 600; padding: 6px 2px 4px; border-radius: 10px;
+  }
+  nav.tabs button .ic { display: block; font-size: 21px; margin-bottom: 1px; }
+  nav.tabs button.on { color: var(--east); }
+
+  .logcard .notes { font-size: 14px; margin-top: 6px; }
+  .kv { display: flex; justify-content: space-between; font-size: 14px; padding: 7px 0; border-bottom: 1px solid var(--line); }
+  .kv:last-child { border-bottom: none; }
+  .kv b { font-variant-numeric: tabular-nums; }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<nav class="tabs" id="tabs"></nav>
+<script>
+"use strict";
+
+/* ============================== DATA ============================== */
+
+const TECHNIQUES = [
+  /* ---------- WESTERN ---------- */
+  {
+    id: "effleurage", side: "west", tradition: "Swedish", name: "Effleurage — Gliding Strokes",
+    areas: "Back · Legs · Arms", pressure: 2, oil: true, mins: "3–5 min",
+    summary: "Long, flowing strokes with flat hands. The opener and closer of almost every Western massage — it spreads the oil, warms the tissue, and tells the nervous system it's safe to relax.",
+    steps: [
+      "Warm a little oil between your palms, then lay both hands flat at the lower back (or ankle).",
+      "Glide slowly up the back either side of the spine — or up the limb toward the heart — keeping full palm contact.",
+      "At the top, fan your hands outward and trail lightly back down the sides with almost no pressure.",
+      "Repeat in a continuous loop, gradually adding a little more weight each pass.",
+      "Keep one hand on your partner whenever you reach for more oil — unbroken contact is what makes it feel seamless."
+    ],
+    tips: [
+      "Firm on the way up, feather-light on the way back — the rhythm is the massage.",
+      "Slow down more than feels natural. Half your instinctive speed is about right.",
+      "Use it between every other technique as a palate cleanser."
+    ],
+    cautions: "Glide beside the spine, never press on the bones themselves."
+  },
+  {
+    id: "petrissage", side: "west", tradition: "Swedish", name: "Petrissage — Kneading",
+    areas: "Shoulders · Glutes · Thighs · Calves", pressure: 3, oil: true, mins: "4–6 min",
+    summary: "Rhythmic lifting, squeezing and rolling of muscle, like kneading bread dough. Best on fleshy areas — it wrings tension out of the muscle belly.",
+    steps: [
+      "Grasp a handful of muscle (top of the shoulder is the classic spot) between your fingers and the heel of your hand.",
+      "Lift it slightly away from the bone, squeeze, then release as your other hand picks up the next handful.",
+      "Alternate hands in a slow, circular rhythm — like kneading dough in place.",
+      "Work along the whole muscle, then finish with a few gliding strokes to smooth it out."
+    ],
+    tips: [
+      "Use your whole hand, not fingertips — pinching feels sharp, kneading feels deep.",
+      "Ask once: “more or less?” — shoulders vary hugely between people.",
+      "Keep your wrists relaxed; the motion comes from your arms rocking."
+    ],
+    cautions: "Skip areas with bruises or varicose veins."
+  },
+  {
+    id: "friction", side: "west", tradition: "Swedish", name: "Friction — Small Circles",
+    areas: "Around shoulder blades · Beside spine · Forearms", pressure: 3, oil: false, mins: "3–5 min",
+    summary: "Small, focused circles or short cross-fiber strokes with thumbs or fingertips. This is the detail work — it targets specific knots and stubborn spots the broad strokes can't reach.",
+    steps: [
+      "Use little or no oil so your fingers don't slide off the spot.",
+      "With thumb pads or the first two fingertips, make small slow circles about the size of a coin.",
+      "Work the muscles either side of the spine and around the edges of the shoulder blades — you'll feel ropy or grainy spots.",
+      "Spend 20–30 seconds on each spot, then smooth the area with a gliding stroke before moving on."
+    ],
+    tips: [
+      "Move the skin over the muscle rather than rubbing across the skin — less burn, more depth.",
+      "The best spots are usually where your partner says “right there.” Let them navigate.",
+      "Brace your thumb with the other fingers to save your joints."
+    ],
+    cautions: "Circle beside the spine, never on the vertebrae. Ease off if anything feels sharp or tingly to your partner."
+  },
+  {
+    id: "tapotement", side: "west", tradition: "Swedish", name: "Tapotement — Percussion",
+    areas: "Upper back · Glutes · Thighs", pressure: 2, oil: false, mins: "1–2 min",
+    summary: "Brisk rhythmic drumming with cupped hands or the edges of loose hands. Wakes tissue up and feels amazing on the upper back — the classic movie-massage move, used briefly.",
+    steps: [
+      "Cup your hands slightly, or use the pinky-edge of relaxed open hands.",
+      "With loose, floppy wrists, drum alternately on the fleshy upper back — a quick, light, even rhythm.",
+      "Keep it to fleshy, muscular areas and sweep across them for a minute or two at most.",
+      "Finish with slow gliding strokes to settle everything back down."
+    ],
+    tips: [
+      "Loose wrists are everything — if your forearms tire quickly, you're too stiff.",
+      "Cupped hands should sound hollow, like a horse trotting, not slappy.",
+      "Great near the end of a session to re-energize, or skip it entirely for a sleepy wind-down."
+    ],
+    cautions: "Never over the spine, the kidneys (the soft area just above the waist, beside the spine), or the back of the knees."
+  },
+  {
+    id: "vibration", side: "west", tradition: "Swedish", name: "Vibration & Jostling",
+    areas: "Arms · Legs · Whole back", pressure: 1, oil: false, mins: "1–2 min",
+    summary: "Gentle shaking and rocking that coaxes a limb or the whole body to let go. Wonderful for partners who have trouble relaxing — you can feel the moment the tension surrenders.",
+    steps: [
+      "Rest your hands on a muscle (calf, forearm, or shoulder) and tremble your hands rapidly for a few seconds.",
+      "Or lift a relaxed arm or leg slightly, and jostle it gently so the muscle wobbles.",
+      "Try slow whole-body rocking: hands on the hip and shoulder, push gently and let them roll back, in a lullaby rhythm.",
+      "If your partner is 'helping' you move the limb, pause and let them melt first."
+    ],
+    tips: [
+      "This is the best tension detector: a truly relaxed limb feels heavy and loose.",
+      "Rocking at about one push per second is deeply calming — same rhythm as rocking a child.",
+      "Keep it playful and light; it should never feel like being shaken awake."
+    ],
+    cautions: ""
+  },
+  {
+    id: "forearm-glide", side: "west", tradition: "Deep tissue", name: "Forearm Glide",
+    areas: "Back · Hamstrings", pressure: 4, oil: true, mins: "3–5 min",
+    summary: "Slow, heavy strokes using the flat of your forearm instead of your hands. This is how you give real depth without wrecking your thumbs — depth comes from body weight and slowness, not effort.",
+    steps: [
+      "Kneel or stand beside your partner. Oil the back well.",
+      "Lay the soft, fleshy part of your forearm (not the bony elbow edge) flat on the lower back, beside the spine.",
+      "Lean your body weight in gradually and glide slowly up toward the shoulder — take a full 10 seconds or more.",
+      "Ask “how's that depth?” on the first pass, and adjust by leaning more or less.",
+      "Repeat 3–4 passes each side, then smooth out with palm strokes."
+    ],
+    tips: [
+      "Slower is deeper. The same pressure at half speed feels twice as deep.",
+      "Keep your wrist and fist relaxed — a clenched fist stiffens the whole forearm.",
+      "Stay on the thick muscle beside the spine; you should never feel bone under your arm."
+    ],
+    cautions: "Deep pressure is earned: only after the area is warmed up with lighter strokes. Never on the neck, spine, or lower back's soft kidney area."
+  },
+  {
+    id: "trigger-point", side: "west", tradition: "Clinical / NMT", name: "Trigger Point Release",
+    areas: "Shoulders · Upper back · Glutes", pressure: 4, oil: false, mins: "2–4 min",
+    summary: "Find a knot, apply steady sustained pressure, and wait for it to soften. Borrowed from neuromuscular therapy — the technique for that one spot your partner always complains about.",
+    steps: [
+      "Explore with flat fingers until you find a tender, ropy knot — your partner will confirm it instantly.",
+      "Press into it slowly with a supported thumb or knuckle, building to a “good hurt” — about 6–7 out of 10, never wincing.",
+      "Hold completely still for 30–60 seconds while your partner breathes slowly. The ache usually fades as it releases.",
+      "Ease off just as slowly, then soothe the area with gliding strokes.",
+      "Two or three spots per session is plenty — this is seasoning, not the meal."
+    ],
+    tips: [
+      "Ask your partner to rate the pressure 1–10 and stay at their 6–7.",
+      "Exhaling into the pressure helps it release — breathe together.",
+      "If the ache doesn't ease within a minute, let it go and move on. Not every knot yields today."
+    ],
+    cautions: "Melting ache is good; sharp, electric, or radiating pain means move off immediately. Never hold pressure on bone, the front of the neck, or anywhere with a pulse."
+  },
+  {
+    id: "myofascial", side: "west", tradition: "Myofascial release", name: "Myofascial Skin Stretch",
+    areas: "Back · Shoulders · IT band", pressure: 2, oil: false, mins: "3–4 min",
+    summary: "Slow stretching of the skin and the connective-tissue layer beneath it — no oil, no sliding. Subtle to give and surprisingly profound to receive.",
+    steps: [
+      "Work on dry skin or through a thin sheet — you want grip, not glide.",
+      "Lay both hands flat on the back a few inches apart, sink in gently, and slowly stretch them away from each other.",
+      "Take the stretch to its comfortable end and just hold — after 30–60 seconds you'll feel the tissue slowly creep and soften.",
+      "Follow the softening: let your hands drift with it rather than forcing further.",
+      "Repeat across the back in different directions, like slowly stretching a sweater into shape."
+    ],
+    tips: [
+      "The feel you're after is stretching dough — not sliding over it, not crushing it.",
+      "This rewards patience like nothing else. If it feels boring to give, you're doing it right.",
+      "Lovely as the very first technique of a session, before any oil goes on."
+    ],
+    cautions: ""
+  },
+  {
+    id: "compression", side: "west", tradition: "Sports massage", name: "Compression Pumping",
+    areas: "Back · Glutes · Thighs · Calves", pressure: 3, oil: false, mins: "2–3 min",
+    summary: "Rhythmic pressing with flat palms, straight through clothes or a sheet. The perfect no-setup warm-up — it pumps fresh blood through the muscle before deeper work.",
+    steps: [
+      "With your partner lying face down (clothed is fine), place one palm flat on a big muscle, other hand stacked on top.",
+      "Lean in with your body weight, then release — a slow pumping rhythm, about one press per second.",
+      "Walk your hands along the whole back (staying beside the spine), then down each leg.",
+      "Cover everything once or twice; the whole body should feel warmed and 'touched in' within a couple of minutes."
+    ],
+    tips: [
+      "Press with body weight, arms straight — think CPR posture but far gentler.",
+      "This is the ideal first technique of any session: zero oil, zero undressing, instant relaxation.",
+      "Match the rhythm to your partner's breathing for a hypnotic effect."
+    ],
+    cautions: "Stay off the spine itself, the lower ribs' kidney area, and the back of the knees."
+  },
+
+  /* ---------- EASTERN ---------- */
+  {
+    id: "palming", side: "east", tradition: "Shiatsu · Japan", name: "Palming",
+    areas: "Back · Legs · Sacrum", pressure: 3, oil: false, mins: "3–5 min",
+    summary: "The heart of shiatsu: leaning steady body weight through soft, relaxed palms, one placement at a time. Done through clothes, no oil — pressure that feels like being held rather than rubbed.",
+    steps: [
+      "Partner lies face down on a mat or firm bed, comfortably clothed.",
+      "Kneel beside them. Place one palm on the sacrum (the flat bone at the base of the spine) as an anchor.",
+      "Place your other palm on the upper back beside the spine, arm straight, and slowly lean your body weight in.",
+      "Hold for a slow breath, ease off, move the palm one hand-width down, and repeat — down the whole back and each leg.",
+      "Keep the pressure perpendicular to the body and your arms relaxed — you're leaning, not pushing."
+    ],
+    tips: [
+      "Shiatsu wisdom: pressure should arrive slowly, stay stationary, and leave slowly.",
+      "Sync with their breath — lean in on their exhale.",
+      "Soft hands, straight arms, weight from your center. If your shoulders tire, you're pushing instead of leaning."
+    ],
+    cautions: "Lean beside the spine, not on it. Keep pressure gentle over the lower back."
+  },
+  {
+    id: "thumbing", side: "east", tradition: "Shiatsu · Japan", name: "Thumbing the Back Lines",
+    areas: "Either side of the spine", pressure: 3, oil: false, mins: "3–4 min",
+    summary: "Slow thumb pressure down the two muscular lines flanking the spine — in shiatsu, the bladder meridian, said to influence the whole body. Press–hold–release, point by point.",
+    steps: [
+      "Find the ropes of muscle running either side of the spine, about two finger-widths out from the bumps.",
+      "Place your thumb pads on these lines at the top of the back, one thumb each side, fingers resting flat for support.",
+      "Lean in slowly to a comfortable firmness, hold for 3–5 seconds, release slowly.",
+      "Move down one thumb-width and repeat, walking all the way down to the sacrum.",
+      "Do two or three slow passes, then soothe with a few palm strokes."
+    ],
+    tips: [
+      "Press with straight thumbs backed by your body weight, not thumb-muscle effort.",
+      "Points that feel tender to your partner often deserve one extra breath of gentle holding.",
+      "The pace should feel meditative — around 5 seconds per point."
+    ],
+    cautions: "Two finger-widths off the spine — never on the vertebrae. Lighten up over the lower back."
+  },
+  {
+    id: "acupressure", side: "east", tradition: "Acupressure · China", name: "Three Classic Points",
+    areas: "Base of skull · Shoulder well · Hand", pressure: 3, oil: false, mins: "3–4 min",
+    summary: "Three famous acupressure points for tension: Gates of Consciousness (base of skull), Shoulder Well (top of shoulders), and Union Valley (hand). Steady holds of 30–60 seconds each.",
+    steps: [
+      "GATES (GB20): find the hollows under the skull base, either side of the neck muscles. Curl your fingertips in, tilt their head slightly back into your fingers, hold 30–60 s.",
+      "SHOULDER WELL (GB21): the highest point of the shoulder muscle, halfway between neck and shoulder tip. Squeeze or press down gently, hold 30 s each side.",
+      "UNION VALLEY (LI4): the fleshy webbing between thumb and index finger. Squeeze between your thumb and finger to a dull ache, hold 30–60 s, then the other hand.",
+      "Close by cradling the head or holding both shoulders still for a few breaths."
+    ],
+    tips: [
+      "The right depth is a pleasant dull ache — never sharp.",
+      "These pair beautifully with slow breathing: hold the point through 4–6 of their breaths.",
+      "GB20 is a favorite for tension headaches and screen-neck."
+    ],
+    cautions: "Tradition and midwives agree: skip Shoulder Well (GB21) and Union Valley (LI4) during pregnancy. Never press the front or sides of the throat."
+  },
+  {
+    id: "thai-palm", side: "east", tradition: "Thai massage · Thailand", name: "Thai Palm Presses",
+    areas: "Legs · Back · Feet", pressure: 3, oil: false, mins: "4–6 min",
+    summary: "Rhythmic alternating palm presses along the body's energy lines (sen), done on a floor mat in comfy clothes. Thai massage is sometimes called “lazy yoga” — this is its walking bassline.",
+    steps: [
+      "Partner lies face down on a mat, arms relaxed at their sides.",
+      "Kneel at their feet. Press one palm into a calf, then the other palm a hand-width up, shifting your weight side to side like a slow cat-walk.",
+      "Walk your palms up one leg, across the glutes and back (beside the spine), then down the other leg.",
+      "Keep a steady rocking rhythm — press on their exhale where you can.",
+      "Repeat the full circuit 2–3 times, slightly deeper each round."
+    ],
+    tips: [
+      "The rocking of your own body creates the rhythm — let your weight do the work.",
+      "Avoid pressing the back of the knee; hop your hand past it.",
+      "A folded blanket under their ankles makes face-down lying much comfier."
+    ],
+    cautions: "Skip the back of the knees. Keep pressure moderate over the lower back and light anywhere it can't 'sink in'."
+  },
+  {
+    id: "thai-stretch", side: "east", tradition: "Thai massage · Thailand", name: "Passive Stretches",
+    areas: "Hips · Hamstrings · Spine", pressure: 2, oil: false, mins: "4–6 min",
+    summary: "You do the stretching; your partner does nothing at all. Three gentle Thai-inspired stretches — knee-to-chest, hamstring, and a lying spinal twist. Move slowly to the first hint of resistance and stop there.",
+    steps: [
+      "KNEE-TO-CHEST: partner on their back. Fold one knee gently toward their chest, hands supporting their shin. Hold 20–30 s, then the other leg, then both together.",
+      "HAMSTRING: hold one straight leg at the heel and calf and raise it slowly. Stop at the first resistance — nowhere near their max. Hold 20–30 s, lower slowly.",
+      "SPINAL TWIST: drop both bent knees gently to one side while their shoulders stay flat; rest one hand on their knees, one on their far shoulder. Hold, then switch sides.",
+      "Move them between positions slowly and supportively, like everything is one continuous motion."
+    ],
+    tips: [
+      "The golden rule: stretch to “ahh,” never to “ooh.” First resistance is the destination.",
+      "Never bounce a stretch. Just hold, and let their exhale deepen it naturally.",
+      "Talk less, move slower — being moved while fully relaxed is the luxury here."
+    ],
+    cautions: "Skip stretches if your partner has back, hip, or knee injuries, and keep twists gentle and high (knees, not lower back forced flat) during any back sensitivity. No stretches without a clinician's okay during pregnancy."
+  },
+  {
+    id: "rolling", side: "east", tradition: "Tuina · China", name: "Rolling (Gun Fa)",
+    areas: "Shoulders · Back · Thighs", pressure: 3, oil: false, mins: "2–4 min",
+    summary: "The signature stroke of Chinese tuina: the back of a loose fist rolls back and forth over the muscle like a rolling pin, delivering waves of warm, kneading pressure.",
+    steps: [
+      "Make a soft, loose fist and place the back of it (the knuckle-to-wrist surface) on the shoulder muscle.",
+      "Rock your wrist back and forth so the hand rolls from knuckles to the back of the hand and back — like a rolling pin rocking in place.",
+      "Keep a quick, even rhythm (about 2 rolls per second) while drifting slowly along the muscle.",
+      "Cover the shoulders, the muscles beside the spine, and the thighs."
+    ],
+    tips: [
+      "All the motion is in your wrist — your arm just carries the hand along.",
+      "It should feel like a warm wave, not a knuckle grind; keep the fist soft.",
+      "Practice on your own thigh first to find the smooth rolling contact."
+    ],
+    cautions: "Fleshy areas only — it feels awful on bone."
+  },
+  {
+    id: "grasping", side: "east", tradition: "Tuina · China", name: "Grasp & Release (Na Fa)",
+    areas: "Shoulders · Neck · Arms · Legs", pressure: 3, oil: false, mins: "2–3 min",
+    summary: "Rhythmically grasping a whole muscle group, lifting it, and letting it go — like a cat kneading in reverse. Tuina's answer to petrissage, done through clothes.",
+    steps: [
+      "Cup your whole hand over the top of the shoulder, fingers on one side, heel of hand on the other.",
+      "Grasp the whole muscle, lift it slightly, give a gentle squeeze, and release.",
+      "Ripple down the shoulder into the upper arm, grasping and releasing rhythmically, then do the other side.",
+      "On the neck: very gently grasp the back of the neck muscle with thumb and fingers — much lighter than the shoulders.",
+      "Finish each area with a few soothing strokes or light rolling."
+    ],
+    tips: [
+      "Grab muscle, not skin — a skin pinch stings, a muscle grasp melts.",
+      "Whole-hand contact: the more of your hand touching, the better it feels.",
+      "Alternate hands in a rhythm, like kneading dough hand over hand."
+    ],
+    cautions: "The neck gets one-quarter of the pressure the shoulders get. Only the back of the neck, never the front or sides."
+  },
+  {
+    id: "abhyanga", side: "east", tradition: "Ayurveda · India", name: "Abhyanga — Warm Oil Strokes",
+    areas: "Whole body", pressure: 2, oil: true, mins: "10–20 min",
+    summary: "The Ayurvedic ritual of unhurried warm-oil massage: long strokes along the long bones, circles on the joints and belly. As much a ritual of care as a technique — generous oil, generous time.",
+    steps: [
+      "Warm the oil: stand the bottle in a bowl of hot water for a few minutes. Sesame and coconut are traditional; any body-safe oil works.",
+      "Begin with the arms: long gliding strokes along the long bones, slow circles around the shoulder, elbow, and wrist joints.",
+      "Repeat on the legs — long strokes on thigh and calf, circles at hip, knee, and ankle.",
+      "On the belly (if welcome): slow, gentle clockwise circles with a warm, flat hand.",
+      "Finish at the feet with unhurried strokes and thumb circles. Let them rest for a few minutes before showering off."
+    ],
+    tips: [
+      "The tradition's memory hook: long strokes on long bones, circles on joints.",
+      "Warm oil is the whole experience — cold oil is a cold shower. Test it on your inner wrist.",
+      "This is meant to feel abundant: more oil, more time, more repetition than feels efficient."
+    ],
+    cautions: "Keep belly work light and clockwise only, and skip it after meals or during pregnancy. Put a towel down — this one is gloriously oily."
+  },
+  {
+    id: "thumb-walking", side: "east", tradition: "Reflexology", name: "Thumb-Walking the Feet",
+    areas: "Soles · Toes · Ankles", pressure: 3, oil: false, mins: "5–8 min",
+    summary: "Tiny caterpillar steps of thumb pressure across every inch of the sole. Reflexology maps the whole body onto the feet; whatever you believe about the map, a thorough foot massage is universal bliss.",
+    steps: [
+      "Rest one foot on your lap or a cushion. Sandwich it between your palms and hold warmly for a few breaths.",
+      "Loosen up: slide your palms along the sole, gently twist the foot side to side, circle the ankle both ways.",
+      "Thumb-walk: press your thumb pad in, inch it forward a few millimeters, press again — creeping in lines from heel to toes until you've covered the whole sole.",
+      "Give the arch (said to mirror the spine) a second, slower pass.",
+      "Squeeze and gently pull each toe, then finish with slow sandwiching strokes. Repeat on the other foot."
+    ],
+    tips: [
+      "Firm pressure is your friend on feet — too light is ticklish, confident is relaxing.",
+      "Support the top of the foot with your fingers while your thumb works the sole.",
+      "A tender spot gets a few extra seconds of steady, gentle holding — never grinding."
+    ],
+    cautions: "Firm pressure prevents tickling. Skip foot massage with any foot injury, gout flare, or severe swelling."
+  },
+  {
+    id: "scalp", side: "east", tradition: "Champi · India", name: "Scalp & Champi",
+    areas: "Scalp · Ears · Face", pressure: 2, oil: false, mins: "3–5 min",
+    summary: "Indian head massage (champi — the word that gave us “shampoo”). Fingertip circles over the whole scalp, gentle hair tugs, and slow ear and temple work. The single highest bliss-per-effort technique in this library.",
+    steps: [
+      "Partner lies on their back, head in easy reach; or sits leaning back against you.",
+      "Spread your fingertips wide and make slow, firm circles that move the scalp over the skull — not hair-rubbing.",
+      "Cover the whole head in patches: hairline, temples, crown, behind the ears, base of the skull.",
+      "Take loose fistfuls of hair close to the roots and give slow, gentle tugs across the head.",
+      "Finish with temple circles, slow squeezes along the ear rims, and a still hold over the ears for one breath."
+    ],
+    tips: [
+      "Move the scalp, not the hair — circles should wiggle the skin over the bone.",
+      "Hair tugs should be slow and close to the scalp; they release the tightest layer of tension.",
+      "Perfect ending for any routine, or a complete 5-minute gift on its own."
+    ],
+    cautions: ""
+  }
+];
+
+const ROUTINES = [
+  {
+    id: "first-swedish", name: "First Session — Swedish Back", minutes: 20, level: "Start here",
+    blurb: "The classic Western back massage, arranged for a first-timer: warm up, flow, knead, go deeper, then float back out. Oil needed.",
+    steps: [
+      { t: "Settle & check in", s: 60, tech: null, cue: "Partner face down, warm and comfortable. Rest your hands on their back, take three slow breaths together, and ask them to tell you about pressure as you go." },
+      { t: "Compression warm-up", s: 120, tech: "compression", cue: "Slow palm presses over the whole back and shoulders, beside the spine — one press per second, leaning your body weight in." },
+      { t: "Effleurage — spread & warm", s: 180, tech: "effleurage", cue: "Oil up. Long slow glides from lower back to shoulders, firm going up, feather-light coming back. Slower than feels natural." },
+      { t: "Petrissage — knead the shoulders", s: 240, tech: "petrissage", cue: "Knead the tops of the shoulders and the muscle around the shoulder blades, hand over hand, like slow bread dough." },
+      { t: "Friction — find the spots", s: 180, tech: "friction", cue: "Small thumb circles beside the spine and around the shoulder blades. Ask them to say 'there' when you cross a good spot, and give it 20 extra seconds." },
+      { t: "Forearm glides — go deeper", s: 180, tech: "forearm-glide", cue: "Slow forearm strokes up each side of the back, leaning in with body weight. Check the depth on your first pass." },
+      { t: "Petrissage — second pass", s: 120, tech: "petrissage", cue: "Return to any areas that were holding tension — they'll knead out easier now that everything is warm." },
+      { t: "Effleurage — long waves", s: 120, tech: "effleurage", cue: "Return to the long gliding strokes, slower and lighter with every pass, letting the whole back settle." },
+      { t: "Feather-light close", s: 60, tech: null, cue: "Fingertip-light strokes down the whole back, slower and softer until your hands just come to rest. Pause, then lift off gently." }
+    ]
+  },
+  {
+    id: "tension-melter", name: "Tension Melter — Neck, Shoulders & Head", minutes: 15, level: "Easy",
+    blurb: "For the desk-worker's classic tension triangle. Mostly Eastern point-work and champi — no oil needed, works on a bed or sofa.",
+    steps: [
+      { t: "Still hands & breath", s: 45, tech: null, cue: "Partner lying down or seated against you. Rest your hands on both shoulders and just breathe together for a few breaths." },
+      { t: "Palming the shoulders", s: 120, tech: "palming", cue: "Lean steady palm pressure into the tops of the shoulders and upper back, one slow placement at a time, in on their exhale." },
+      { t: "Grasp & release the traps", s: 150, tech: "grasping", cue: "Whole-hand grasping of the shoulder muscles — lift, squeeze, release, rippling out toward the arms. Grab muscle, not skin." },
+      { t: "Shoulder Well point", s: 90, tech: "acupressure", cue: "Find the highest point of each shoulder muscle. Press or squeeze gently to a pleasant ache and hold ~30 s each side. (Skip in pregnancy.)" },
+      { t: "Friction around the blades", s: 150, tech: "friction", cue: "Slow fingertip circles around the edges of the shoulder blades and up the sides of the neck — coin-sized circles, no sliding." },
+      { t: "Gates of Consciousness", s: 90, tech: "acupressure", cue: "Curl your fingertips into the hollows under the base of the skull, let their head rest back into your fingers, and hold for 4–6 slow breaths." },
+      { t: "Scalp circles & hair tugs", s: 180, tech: "scalp", cue: "Firm fingertip circles moving the scalp over the skull, patch by patch, then slow gentle fistfuls-of-hair tugs across the whole head." },
+      { t: "Temples & ears to finish", s: 75, tech: "scalp", cue: "Slow temple circles, squeezes along the ear rims, then still hands cupped over the ears for one long breath." }
+    ]
+  },
+  {
+    id: "east-west-back", name: "East Meets West — Full Back", minutes: 25, level: "Intermediate",
+    blurb: "One back, two traditions: shiatsu palming and meridian thumbing flowing into Swedish kneading, trigger points, and tuina rolling.",
+    steps: [
+      { t: "Check in & settle", s: 60, tech: null, cue: "Face down, comfortable, arms relaxed. Hands still on their back, three shared breaths. Agree on a pressure word for 'less'." },
+      { t: "Palming down the back", s: 180, tech: "palming", cue: "Anchor one hand on the sacrum; lean palm pressure down the back beside the spine, placement by placement, then down each leg to the calves." },
+      { t: "Thumbing the back lines", s: 180, tech: "thumbing", cue: "Thumb pads on the muscle lines two finger-widths off the spine. Press–hold–release, walking from shoulders to sacrum. Two slow passes." },
+      { t: "Effleurage — oil & warm", s: 150, tech: "effleurage", cue: "Now oil up and switch to long Swedish glides, wrist to shoulder, building warmth over the areas you just pressed." },
+      { t: "Petrissage — the broad knead", s: 210, tech: "petrissage", cue: "Knead shoulders, the flanks, and up the sides of the back. Let your hands linger anywhere that feels ropy." },
+      { t: "Trigger points — two spots", s: 180, tech: "trigger-point", cue: "Pick the two most tender knots you've found. Slow sustained pressure at their 6–7/10 for 30–60 s each, breathing together, then soothe." },
+      { t: "Rolling over the shoulders", s: 150, tech: "rolling", cue: "Soft-fist tuina rolling across the shoulders and beside the spine — quick, even waves, drifting slowly along each muscle." },
+      { t: "Light tapotement", s: 60, tech: "tapotement", cue: "Optional: a minute of soft cupping percussion over the fleshy upper back — skip it if your partner is nearly asleep." },
+      { t: "Long closing glides", s: 180, tech: "effleurage", cue: "Return to full-length strokes, each one slower and lighter, down to fingertip trails. Rest your hands, then lift off." }
+    ]
+  },
+  {
+    id: "thai-floor", name: "Thai-Inspired Floor Session", minutes: 20, level: "Intermediate",
+    blurb: "Comfy clothes, a mat or duvet on the floor, no oil. Rhythmic palm presses and lazy-yoga stretches — you move, they melt.",
+    steps: [
+      { t: "Set the mat & check in", s: 60, tech: null, cue: "Partner face down on a mat in soft clothes, blanket roll under the ankles. Ask about any sore knees, hips, or back before stretching." },
+      { t: "Palm-press the legs", s: 210, tech: "thai-palm", cue: "From their feet, walk alternating palm presses up each leg — calf, hamstring, glute — rocking your weight side to side. Skip the back of the knees." },
+      { t: "Palm-press the back", s: 180, tech: "thai-palm", cue: "Continue the palm-walk up beside the spine to the shoulders and back down. Press on their exhale, twice around." },
+      { t: "Grasp & release", s: 120, tech: "grasping", cue: "Knead the shoulders and the backs of the arms with whole-hand grasps through the clothes." },
+      { t: "Turn over · knee-to-chest", s: 150, tech: "thai-stretch", cue: "Partner rolls onto their back. Fold one knee gently toward the chest, hold 20–30 s, switch legs, then both knees together, rocking gently." },
+      { t: "Hamstring stretches", s: 150, tech: "thai-stretch", cue: "Raise each straight leg slowly to the first hint of resistance — no further — and hold for a few breaths. Lower slowly like it's precious." },
+      { t: "Spinal twist", s: 150, tech: "thai-stretch", cue: "Drop both bent knees to one side, shoulders staying down; one hand on knees, one on the far shoulder. A few breaths each side." },
+      { t: "Final palming & rest", s: 180, tech: "palming", cue: "Legs down. Slow palm presses on the thighs and shoulders, then rest your hands still and let them lie quietly for a minute." }
+    ]
+  },
+  {
+    id: "foot-winddown", name: "Foot Wind-Down", minutes: 15, level: "Easy",
+    blurb: "A reflexology-style foot session for the end of a long day. One foot at a time, firm and unhurried. Sofa-compatible.",
+    steps: [
+      { t: "Warm holds", s: 60, tech: null, cue: "Feet in your lap on a towel. Sandwich one foot between your palms and hold it warmly for a few breaths. A little oil or lotion is optional." },
+      { t: "Loosen the whole foot", s: 120, tech: "thumb-walking", cue: "Glide your palms along the sole, twist the foot gently side to side between your hands, circle the ankle both directions." },
+      { t: "Thumb-walk the sole", s: 210, tech: "thumb-walking", cue: "Tiny caterpillar presses in lines from heel to toes until the whole sole is covered. Firm and confident — too light tickles." },
+      { t: "Arch & heel, second pass", s: 120, tech: "thumb-walking", cue: "A slower, deeper pass along the arch and around the heel. Give any tender spot a few seconds of steady holding." },
+      { t: "Toes & finish this foot", s: 90, tech: "thumb-walking", cue: "Squeeze and slowly pull each toe, circle each one, then finish with slow sandwiching strokes from ankle to toes." },
+      { t: "Second foot — full sequence", s: 270, tech: "thumb-walking", cue: "The whole sequence again on the other foot: warm holds, loosening, thumb-walking, arch pass, toes." },
+      { t: "Both feet close", s: 30, tech: null, cue: "One warm still hold on both feet at once, a slow breath, and release." }
+    ]
+  },
+  {
+    id: "quick-reset", name: "Ten-Minute Reset", minutes: 10, level: "Easy",
+    blurb: "The weeknight special: shoulders, neck and scalp in ten minutes, clothes on, anywhere. Small gift, big payoff.",
+    steps: [
+      { t: "Hands on, breathe", s: 30, tech: null, cue: "Seated or lying, your hands resting on their shoulders. Two slow breaths together." },
+      { t: "Compression & palming", s: 90, tech: "compression", cue: "Lean rhythmic palm presses into the shoulders and upper back through the clothes." },
+      { t: "Grasp & release the shoulders", s: 120, tech: "grasping", cue: "Whole-hand kneading of both shoulders, rippling from the neck outward. Muscle, not skin." },
+      { t: "Thumb circles up the neck", s: 90, tech: "friction", cue: "Small slow circles up the back of the neck, either side of the spine, to the base of the skull." },
+      { t: "Gates of Consciousness hold", s: 60, tech: "acupressure", cue: "Fingertips curled into the hollows under the skull base, steady hold for 4–6 slow breaths." },
+      { t: "Scalp circles", s: 120, tech: "scalp", cue: "Firm fingertip circles moving the scalp itself, covering the whole head patch by patch." },
+      { t: "Slow finish", s: 90, tech: "scalp", cue: "Gentle hair tugs, temple circles, then still hands for one last breath. Done — in under ten minutes." }
+    ]
+  }
+];
+
+const BASICS = [
+  {
+    icon: "🤲", title: "What this is (and isn't)",
+    body: `<p>Everything here is <b>wellness massage between partners</b> — relaxation, connection, and everyday aches. It is not medical treatment, and it doesn't diagnose or fix injuries.</p>
+    <ul class="plain">
+      <li>If your partner has a health condition, an injury, is pregnant, or anything here causes pain — pause and check with a clinician first.</li>
+      <li>Massage should feel somewhere between pleasant and “good hurt.” Wincing, sharp, electric, or numb-and-tingly means stop and move elsewhere.</li>
+    </ul>`
+  },
+  {
+    icon: "🕯️", title: "Setting up the room",
+    body: `<ul class="plain">
+      <li><b>Warm room</b> — a relaxed body cools fast. Warmer than feels necessary is right.</li>
+      <li><b>Firm surface</b> — a mat, duvet, or firm bed. A soft mattress swallows your pressure.</li>
+      <li><b>Towels</b> — one to lie on, one to cover whatever you're not working on. Being covered is half of feeling relaxed.</li>
+      <li><b>Oil</b> — sweet almond, fractionated coconut, jojoba, or grapeseed all work. Warm it in your hands (or the bottle in hot water) first.</li>
+      <li><b>No interruptions</b> — phones away, lights low, quiet music if you like. Thirty undistracted minutes beats sixty distracted ones.</li>
+    </ul>`
+  },
+  {
+    icon: "🧍", title: "Body mechanics — protect yourself",
+    body: `<p>The number-one beginner mistake is massaging with hand strength. You'll be sore in ten minutes and your pressure will feel effortful. Instead:</p>
+    <ul class="plain">
+      <li><b>Lean, don't push.</b> Straight arms, weight from your body. Depth comes from leaning in, not muscling.</li>
+      <li><b>Slow equals deep.</b> The same pressure at half speed feels twice as deep.</li>
+      <li><b>Spare your thumbs.</b> Alternate with palms, forearms, soft fists, and stacked fingers.</li>
+      <li><b>Position yourself well</b> — kneel or stand so the stroke moves away from you and gravity helps.</li>
+      <li><b>Breathe.</b> If you're holding your breath, your hands have gone tense too.</li>
+    </ul>`
+  },
+  {
+    icon: "💬", title: "The check-in script",
+    body: `<p>Good massage runs on feedback. Use a 1–10 pressure scale and aim to live at your partner's <b>6–7</b> — “melts, doesn't wince.”</p>
+    <ul class="plain">
+      <li>Start of session: <i>“Tell me if anything's too much or too little — one word is fine.”</i></li>
+      <li>First deep technique: <i>“How's this depth, 1 to 10?”</i></li>
+      <li>Otherwise, ask rarely — two or three check-ins a session. Constant questions break the spell; silence usually means bliss.</li>
+      <li>Afterwards, ask for <b>one thing to do more of and one to change</b> — then log it in this app. That loop is how you actually improve.</li>
+    </ul>`
+  },
+  {
+    icon: "🎚️", title: "Pressure guide",
+    body: `<ul class="plain">
+      <li><span class="dots">●○○○</span>&nbsp; <b>Feather</b> — fingertip trails, closing strokes. Skin-level only.</li>
+      <li><span class="dots">●●○○</span>&nbsp; <b>Light</b> — spreading oil, effleurage, scalp and face work.</li>
+      <li><span class="dots">●●●○</span>&nbsp; <b>Medium</b> — kneading, palming, thumb-walking. The everyday depth.</li>
+      <li><span class="dots">●●●●</span>&nbsp; <b>Deep</b> — forearm glides, trigger points. Only on warmed muscle, only with feedback, never on the neck.</li>
+    </ul>
+    <div class="callout tip">Whatever the technique, arrive slowly, stay steady, leave slowly. Sudden pressure is what makes bodies flinch.</div>`
+  },
+  {
+    icon: "⚠️", title: "Areas to treat with care",
+    body: `<p>Some spots hide nerves, vessels, and organs close to the surface. Glide over them lightly or skip them:</p>
+    <ul class="plain">
+      <li><b>Front & sides of the neck</b> — never press. Back of the neck only, and gently.</li>
+      <li><b>The spine itself</b> — work the muscle ropes beside the vertebrae, not the bones.</li>
+      <li><b>Kidney area</b> — the soft zone between the lowest ribs and hip bones, beside the spine: light strokes only, no percussion.</li>
+      <li><b>Back of the knee, inner elbow, armpit, groin</b> — glide past, don't press in.</li>
+      <li><b>Bruises, varicose veins, rashes, recent injuries</b> — go around, never over.</li>
+    </ul>`
+  },
+  {
+    icon: "🚫", title: "When to skip massage",
+    body: `<p>Some days the kindest massage is none. Skip the session (or get medical advice first) when your partner has:</p>
+    <ul class="plain">
+      <li>Fever or feels acutely unwell.</li>
+      <li>A known or suspected <b>blood clot / DVT</b> (often a swollen, warm, painful calf) — never massage it; seek care.</li>
+      <li>A recent injury, sprain, or surgery — avoid the area entirely until healed.</li>
+      <li>Skin infection or an unexplained rash.</li>
+      <li><b>Pregnancy</b> — gentle massage is usually lovely, but get their midwife's or doctor's guidance, skip deep work, belly pressure, and the classic points (Shoulder Well GB21, Union Valley LI4), and position on the side after mid-pregnancy.</li>
+      <li>Any serious medical condition (heart, cancer treatment, osteoporosis, blood thinners) — doctor first, gentle always.</li>
+    </ul>`
+  },
+  {
+    icon: "📈", title: "How to actually get better",
+    body: `<ul class="plain">
+      <li><b>Log every session</b> in this app — technique counts and your partner's feedback are your training data.</li>
+      <li><b>One new technique per session</b> layered onto ones you know; don't cram five novelties into one back.</li>
+      <li><b>Cut your speed in half.</b> Reread this after every session. It's always still true.</li>
+      <li><b>Ask for one “more of this” and one “change this”</b> at the end — specific, kind, and logged.</li>
+      <li><b>Trade places sometimes.</b> Receiving the techniques teaches your hands more than any description can.</li>
+    </ul>`
+  }
+];
+
+/* ---------- Body map ---------- */
+
+const REGIONS = {
+  scalp:      { label: "Head & scalp", note: "The highest bliss-per-effort area. Fingertip circles that move the scalp over the skull, slow hair tugs, temple and ear work.", caution: "", techs: ["scalp", "acupressure"] },
+  neck:       { label: "Back of the neck", note: "Gentle territory: light grasping and small slow circles up to the base of the skull. A quarter of the pressure you'd use on shoulders.", caution: "Back of the neck only — never press the front or sides of the throat.", techs: ["grasping", "friction", "acupressure"] },
+  throat:     { label: "Front of the neck", note: "", caution: "Off-limits. The front and sides of the throat carry major vessels and nerves close to the surface — no pressing here, ever. Work the back of the neck and shoulders instead.", techs: [] },
+  shoulders:  { label: "Shoulders", note: "Where everyone holds their tension. Kneading, grasping, and rolling shine here, with a trigger point or two once warm. This area takes real pressure happily.", caution: "Skip the Shoulder Well acupressure point during pregnancy.", techs: ["petrissage", "grasping", "rolling", "palming", "trigger-point", "tapotement"] },
+  "upper-back": { label: "Upper back", note: "The main stage. Warm it with compression and long glides, knead it, detail around the shoulder blades, then go deep with forearms once it's ready.", caution: "Work the muscle ropes beside the spine — never press the vertebrae themselves.", techs: ["effleurage", "petrissage", "friction", "thumbing", "forearm-glide", "myofascial", "compression", "palming"] },
+  "lower-back": { label: "Lower back", note: "Loves warmth and broad, steady pressure — palms, slow glides, gentle thumbing of the muscle lines. Less depth than the upper back wants.", caution: "Light over the kidney area (between the lowest ribs and the hip bones, beside the spine) — no percussion, no deep pressure there.", techs: ["effleurage", "palming", "thumbing", "myofascial", "thai-palm"] },
+  glutes:     { label: "Glutes & hips", note: "Big, strong muscles that quietly drive most lower-back grumbles. Through clothes or a sheet: compression, kneading, and slow trigger point work.", caution: "", techs: ["petrissage", "compression", "trigger-point", "tapotement", "thai-palm"] },
+  hamstrings: { label: "Backs of the thighs", note: "Long, meaty muscles built for forearm glides, palm-walking, and kneading. Finish with a gentle hamstring stretch.", caution: "Glide past the back of the knee — never press into it.", techs: ["forearm-glide", "petrissage", "compression", "thai-palm", "thai-stretch"] },
+  calves:     { label: "Calves", note: "Kneading, palm presses, and jostling feel wonderful here, especially after a day on their feet. Work from ankle toward the knee.", caution: "Never massage a calf that is swollen, warm, or painful — that pattern can signal a blood clot and needs a clinician, not massage.", techs: ["petrissage", "effleurage", "grasping", "thai-palm", "vibration"] },
+  feet:       { label: "Feet", note: "Thumb-walk every inch of the sole, give the arch a second pass, squeeze each toe. Firm and confident beats ticklish and tentative.", caution: "Skip with foot injuries, gout flares, or severe swelling.", techs: ["thumb-walking", "abhyanga", "thai-palm"] },
+  arms:       { label: "Arms", note: "Often forgotten, always appreciated. Long strokes toward the heart, gentle kneading of the forearms, grasping down from the shoulder, a jostle to finish.", caution: "Glide past the inner elbow and armpit rather than pressing in.", techs: ["effleurage", "petrissage", "grasping", "vibration", "abhyanga"] },
+  hands:      { label: "Hands", note: "Thumb-circle the palm like a tiny sole, squeeze along each finger, and hold the Union Valley point in the thumb webbing for a slow breath or two.", caution: "Skip the Union Valley (LI4) point during pregnancy.", techs: ["acupressure", "thumb-walking"] },
+  chest:      { label: "Chest & décolleté", note: "Light, open-handed gliding strokes across the upper chest and along the collarbones, sweeping out toward the shoulders. Stay light and stay welcome.", caution: "Comfort first: ask before working here, keep pressure light, and avoid breast tissue.", techs: ["effleurage", "abhyanga"] },
+  belly:      { label: "Belly", note: "For the brave and the trusted: warm flat hands, slow clockwise circles only, following the direction of digestion. Deeply calming when it's welcome.", caution: "Always ask first. Light pressure only, clockwise only, not right after meals, and skip entirely during pregnancy.", techs: ["abhyanga"] },
+  quads:      { label: "Fronts of the thighs", note: "Sturdy muscles that enjoy kneading, compression pumping, and rolling. Long warm-oil strokes tie the whole leg together.", caution: "", techs: ["petrissage", "compression", "rolling", "abhyanga", "vibration"] },
+  shins:      { label: "Shins & knees", note: "Mostly bone — glide over with light oil strokes and circle gently around (not on) the kneecap on your way between thigh and foot.", caution: "No kneading or deep pressure on the shin bone or kneecap.", techs: ["effleurage", "abhyanga"] }
+};
+
+const BODY_SHAPES = {
+  back: [
+    ["scalp",      '<circle cx="110" cy="42" r="27"/>'],
+    ["neck",       '<rect x="97" y="70" width="26" height="20" rx="8"/>'],
+    ["shoulders",  '<rect x="56" y="90" width="108" height="24" rx="12"/>'],
+    ["arms",       '<rect x="38" y="116" width="22" height="108" rx="11"/><rect x="160" y="116" width="22" height="108" rx="11"/>'],
+    ["hands",      '<ellipse cx="49" cy="242" rx="12" ry="17"/><ellipse cx="171" cy="242" rx="12" ry="17"/>'],
+    ["upper-back", '<rect x="68" y="116" width="84" height="66" rx="10"/>'],
+    ["lower-back", '<rect x="71" y="186" width="78" height="40" rx="10"/>'],
+    ["glutes",     '<rect x="68" y="230" width="84" height="42" rx="16"/>'],
+    ["hamstrings", '<rect x="72" y="276" width="35" height="66" rx="14"/><rect x="113" y="276" width="35" height="66" rx="14"/>'],
+    ["calves",     '<rect x="75" y="346" width="31" height="62" rx="13"/><rect x="114" y="346" width="31" height="62" rx="13"/>'],
+    ["feet",       '<ellipse cx="90" cy="426" rx="15" ry="17"/><ellipse cx="130" cy="426" rx="15" ry="17"/>']
+  ],
+  front: [
+    ["scalp",      '<circle cx="110" cy="42" r="27"/>'],
+    ["throat",     '<rect x="97" y="70" width="26" height="20" rx="8"/>'],
+    ["shoulders",  '<rect x="56" y="90" width="108" height="24" rx="12"/>'],
+    ["arms",       '<rect x="38" y="116" width="22" height="108" rx="11"/><rect x="160" y="116" width="22" height="108" rx="11"/>'],
+    ["hands",      '<ellipse cx="49" cy="242" rx="12" ry="17"/><ellipse cx="171" cy="242" rx="12" ry="17"/>'],
+    ["chest",      '<rect x="68" y="116" width="84" height="48" rx="10"/>'],
+    ["belly",      '<rect x="71" y="168" width="78" height="58" rx="12"/>'],
+    ["quads",      '<rect x="72" y="230" width="35" height="82" rx="14"/><rect x="113" y="230" width="35" height="82" rx="14"/>'],
+    ["shins",      '<rect x="75" y="316" width="31" height="92" rx="13"/><rect x="114" y="316" width="31" height="92" rx="13"/>'],
+    ["feet",       '<ellipse cx="90" cy="426" rx="15" ry="17"/><ellipse cx="130" cy="426" rx="15" ry="17"/>']
+  ]
+};
+
+/* ============================== STATE ============================== */
+
+const KEY = "kneaded-v1";
+let db = load();
+function load() {
+  try {
+    const d = JSON.parse(localStorage.getItem(KEY));
+    if (d && typeof d === "object") return { practiced: d.practiced || {}, sessions: d.sessions || [] };
+  } catch (e) {}
+  return { practiced: {}, sessions: [] };
+}
+function save() { localStorage.setItem(KEY, JSON.stringify(db)); }
+
+let tab = "learn";
+let view = { name: "learn" };       // learn | tech | body | routines | routine | run | feedback | log | logform | basics
+let filter = "all";
+let bodySide = "back";
+let bodyZone = null;
+let techReturn = null;              // view to go back to from a technique page
+let run = null;                      // { routine, idx, remaining, paused, timer }
+let fdata = {};                       // scratch for feedback / manual log forms
+
+const $ = sel => document.querySelector(sel);
+const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const tech = id => TECHNIQUES.find(t => t.id === id);
+const fmt = s => Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0");
+const dots = p => '<span class="dots">' + "●".repeat(p) + '<span class="off">' + "●".repeat(4 - p) + "</span></span>";
+const sideBadge = t => `<span class="badge ${t.side}">${t.side === "east" ? "Eastern" : "Western"}</span><span class="badge neutral">${esc(t.tradition)}</span>`;
+
+/* ============================== VIEWS ============================== */
+
+function go(v) {
+  if (v.name === "tech" && view.name !== "tech") techReturn = view;
+  view = v; render(); window.scrollTo(0, 0);
+}
+function goBack() {
+  const t = techReturn || { name: "learn" };
+  tab = t.name === "body" ? "body" : (t.name === "routine" || t.name === "routines") ? "routines" : "learn";
+  go(t);
+}
+
+function render() {
+  const app = $("#app");
+  if (view.name === "learn") app.innerHTML = learnView();
+  else if (view.name === "tech") app.innerHTML = techView(view.id);
+  else if (view.name === "body") app.innerHTML = bodyView();
+  else if (view.name === "routines") app.innerHTML = routinesView();
+  else if (view.name === "routine") app.innerHTML = routineView(view.id);
+  else if (view.name === "run") app.innerHTML = runView();
+  else if (view.name === "feedback") app.innerHTML = feedbackView();
+  else if (view.name === "log") app.innerHTML = logView();
+  else if (view.name === "logform") app.innerHTML = logFormView();
+  else if (view.name === "basics") app.innerHTML = basicsView();
+  renderTabs();
+}
+
+function renderTabs() {
+  const items = [
+    ["learn", "🖐️", "Learn"],
+    ["body", "🧍", "Body"],
+    ["routines", "🕰️", "Routines"],
+    ["log", "📓", "Log"],
+    ["basics", "🌿", "Basics"]
+  ];
+  $("#tabs").innerHTML = items.map(([id, ic, label]) =>
+    `<button class="${tab === id ? "on" : ""}" onclick="setTab('${id}')"><span class="ic">${ic}</span>${label}</button>`
+  ).join("");
+  $("#tabs").style.display = (view.name === "run") ? "none" : "flex";
+}
+function setTab(t) { tab = t; go({ name: t }); }
+
+/* ---------- Learn ---------- */
+
+function learnView() {
+  const chips = [["all", "All"], ["east", "Eastern"], ["west", "Western"], ["oil", "With oil"], ["dry", "No oil"]];
+  const list = TECHNIQUES.filter(t =>
+    filter === "all" ? true :
+    filter === "oil" ? t.oil :
+    filter === "dry" ? !t.oil : t.side === filter
+  );
+  return `
+  <header class="appbar">
+    <h1>Knea<em>ded</em></h1>
+    <p>East & West massage techniques to learn, practice, and perfect on your partner.</p>
+  </header>
+  <div class="chips">${chips.map(([id, l]) => `<button class="chip ${filter === id ? "on" : ""}" onclick="setFilter('${id}')">${l}</button>`).join("")}</div>
+  ${list.map(t => {
+    const n = db.practiced[t.id] || 0;
+    return `<div class="card tappable" onclick="go({name:'tech', id:'${t.id}'})">
+      <div>${sideBadge(t)}${n ? `<span class="badge green">practiced ×${n}</span>` : ""}</div>
+      <h2>${esc(t.name)}</h2>
+      <div class="meta">${esc(t.areas)} · ${dots(t.pressure)} · ${t.oil ? "oil" : "no oil"} · ${esc(t.mins)}</div>
+    </div>`;
+  }).join("")}`;
+}
+function setFilter(f) { filter = f; render(); }
+
+/* ---------- Technique detail ---------- */
+
+function techView(id) {
+  const t = tech(id);
+  if (!t) return learnView();
+  const n = db.practiced[t.id] || 0;
+  return `
+  <button class="back" onclick="goBack()">‹ Back</button>
+  <div>${sideBadge(t)}</div>
+  <h1 style="font-family:var(--serif); font-size:26px; margin:6px 0 4px; line-height:1.25;">${esc(t.name)}</h1>
+  <p class="meta" style="color:var(--muted); font-size:13.5px;">${esc(t.areas)} · ${dots(t.pressure)} pressure · ${t.oil ? "uses oil" : "no oil"} · ${esc(t.mins)}</p>
+  <p style="margin:12px 0; font-size:15.5px;">${t.summary}</p>
+  <div class="section-title">How to do it</div>
+  <div class="card"><ol class="steps">${t.steps.map(s => `<li>${s}</li>`).join("")}</ol></div>
+  <div class="section-title">Make it feel amazing</div>
+  <div class="card"><ul class="plain" style="margin:4px 0;">${t.tips.map(s => `<li>${s}</li>`).join("")}</ul></div>
+  ${t.cautions ? `<div class="callout warn">⚠️ ${t.cautions}</div>` : ""}
+  <div style="margin-top:18px;">
+    <button class="btn east" onclick="markPracticed('${t.id}')">🖐️ I practiced this${n ? ` (×${n})` : ""}</button>
+  </div>`;
+}
+function markPracticed(id) {
+  db.practiced[id] = (db.practiced[id] || 0) + 1;
+  save(); render();
+}
+
+/* ---------- Body map ---------- */
+
+function bodyView() {
+  const shapes = BODY_SHAPES[bodySide].map(([id, svg]) =>
+    `<g class="zone ${bodyZone === id ? "sel" : ""}" onclick="pickZone('${id}')">${svg}</g>`
+  ).join("");
+  return `
+  <header class="appbar">
+    <h1>Body map</h1>
+    <p>Tap a body part to see the techniques that suit it — and what to watch out for.</p>
+  </header>
+  <div class="chips" style="justify-content:center;">
+    <button class="chip ${bodySide === "back" ? "on" : ""}" onclick="setSide('back')">Back of body</button>
+    <button class="chip ${bodySide === "front" ? "on" : ""}" onclick="setSide('front')">Front of body</button>
+  </div>
+  <svg class="bodymap" viewBox="0 0 220 460" xmlns="http://www.w3.org/2000/svg" aria-label="Tappable body map, ${bodySide} view">${shapes}</svg>
+  ${zonePanel()}`;
+}
+function setSide(s) { bodySide = s; if (bodyZone && !BODY_SHAPES[s].some(([id]) => id === bodyZone)) bodyZone = null; render(); }
+function pickZone(id) { bodyZone = (bodyZone === id) ? null : id; render(); const p = $("#zonepanel"); if (p) p.scrollIntoView({ behavior: "smooth", block: "nearest" }); }
+function zonePanel() {
+  if (!bodyZone) return `
+    <div class="empty" id="zonepanel" style="padding:18px 20px 6px;">
+      <p>Nothing selected yet — tap the figure above.</p>
+    </div>`;
+  const z = REGIONS[bodyZone];
+  return `
+  <div id="zonepanel">
+    <h2 style="font-family:var(--serif); font-size:22px; margin:8px 0 4px;">${esc(z.label)}</h2>
+    ${z.note ? `<p style="font-size:14.5px; margin-bottom:4px;">${z.note}</p>` : ""}
+    ${z.caution ? `<div class="callout warn" style="margin-bottom:10px;">⚠️ ${z.caution}</div>` : ""}
+    ${z.techs.length ? `<div class="section-title">Techniques for this area</div>` +
+      z.techs.map(id => {
+        const t = tech(id);
+        return `<div class="card tappable" style="padding:11px 14px;" onclick="go({name:'tech', id:'${id}'})">
+          <div style="display:flex; justify-content:space-between; align-items:baseline; gap:8px;">
+            <b style="font-size:14.5px;">${esc(t.name)}</b>
+            <span style="flex:none;">${dots(t.pressure)}</span>
+          </div>
+          <div class="meta">${t.side === "east" ? "Eastern" : "Western"} · ${esc(t.tradition)} · ${t.oil ? "oil" : "no oil"}</div>
+        </div>`;
+      }).join("") : ""}
+  </div>`;
+}
+
+/* ---------- Routines ---------- */
+
+function routinesView() {
+  return `
+  <header class="appbar">
+    <h1>Guided routines</h1>
+    <p>Timed, step-by-step sessions. Prop the phone up where you can see it and follow along.</p>
+  </header>
+  ${ROUTINES.map(r => {
+    const done = db.sessions.filter(s => s.routineId === r.id).length;
+    return `<div class="card tappable" onclick="go({name:'routine', id:'${r.id}'})">
+      <div><span class="badge gold">${r.minutes} min</span><span class="badge neutral">${r.level}</span>${done ? `<span class="badge green">done ×${done}</span>` : ""}</div>
+      <h2>${esc(r.name)}</h2>
+      <div class="meta">${esc(r.blurb)}</div>
+    </div>`;
+  }).join("")}`;
+}
+
+function routineView(id) {
+  const r = ROUTINES.find(x => x.id === id);
+  if (!r) return routinesView();
+  return `
+  <button class="back" onclick="setTab('routines')">‹ All routines</button>
+  <div><span class="badge gold">${r.minutes} min</span><span class="badge neutral">${r.level}</span></div>
+  <h1 style="font-family:var(--serif); font-size:26px; margin:6px 0 6px; line-height:1.25;">${esc(r.name)}</h1>
+  <p style="font-size:15px; color:var(--muted); margin-bottom:14px;">${esc(r.blurb)}</p>
+  <button class="btn east" onclick="startRun('${r.id}')">▶ Begin session</button>
+  <div class="section-title">The sequence</div>
+  ${r.steps.map((s, i) => `
+    <div class="card${s.tech ? " tappable" : ""}" ${s.tech ? `onclick="go({name:'tech', id:'${s.tech}'})"` : ""} style="padding:12px 14px;">
+      <div style="display:flex; justify-content:space-between; gap:8px; align-items:baseline;">
+        <b style="font-size:15px;">${i + 1}. ${esc(s.t)}</b>
+        <span class="meta" style="flex:none;">${fmt(s.s)}</span>
+      </div>
+      <div class="meta" style="margin-top:2px;">${esc(s.cue)}</div>
+      ${s.tech ? `<div style="margin-top:6px;"><span class="badge ${tech(s.tech).side}">${esc(tech(s.tech).name)}</span></div>` : ""}
+    </div>`).join("")}`;
+}
+
+/* ---------- Runner ---------- */
+
+let wakeLock = null;
+async function grabWakeLock() {
+  try { wakeLock = await navigator.wakeLock.request("screen"); } catch (e) { wakeLock = null; }
+}
+function releaseWakeLock() { try { wakeLock && wakeLock.release(); } catch (e) {} wakeLock = null; }
+
+function chime() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    [523.25, 659.25].forEach((f, i) => {
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.frequency.value = f; o.type = "sine";
+      o.connect(g); g.connect(ctx.destination);
+      const t0 = ctx.currentTime + i * 0.18;
+      g.gain.setValueAtTime(0.0001, t0);
+      g.gain.exponentialRampToValueAtTime(0.12, t0 + 0.03);
+      g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.8);
+      o.start(t0); o.stop(t0 + 0.9);
+    });
+  } catch (e) {}
+}
+
+function startRun(id) {
+  const r = ROUTINES.find(x => x.id === id);
+  run = { routine: r, idx: 0, remaining: r.steps[0].s, paused: false, timer: setInterval(tick, 1000) };
+  grabWakeLock();
+  go({ name: "run" });
+}
+function tick() {
+  if (!run || run.paused) return;
+  run.remaining--;
+  if (run.remaining <= 0) {
+    chime();
+    if (run.idx + 1 < run.routine.steps.length) {
+      run.idx++; run.remaining = run.routine.steps[run.idx].s;
+    } else { finishRun(); return; }
+  }
+  if (view.name === "run") updateRunDom();
+}
+function updateRunDom() {
+  const el = $("#clock"); if (!el) { render(); return; }
+  el.textContent = fmt(Math.max(0, run.remaining));
+  const step = run.routine.steps[run.idx];
+  const pct = 100 * (1 - run.remaining / step.s);
+  const bar = $("#runbarfill"); if (bar) bar.style.width = pct + "%";
+  const no = $("#stepno"); if (no) no.textContent = `Step ${run.idx + 1} of ${run.routine.steps.length}`;
+  const ti = $("#steptitle"); if (ti) ti.textContent = step.t;
+  const cu = $("#stepcue"); if (cu) cu.textContent = step.cue;
+}
+function runView() {
+  const step = run.routine.steps[run.idx];
+  const pct = 100 * (1 - run.remaining / step.s);
+  return `
+  <div class="runner">
+    <div class="stepno" id="stepno">Step ${run.idx + 1} of ${run.routine.steps.length}</div>
+    <h2 id="steptitle">${esc(step.t)}</h2>
+    <p class="cue" id="stepcue">${esc(step.cue)}</p>
+    <div class="clock ${run.paused ? "paused" : ""}" id="clock">${fmt(run.remaining)}</div>
+    <div class="runbar"><i id="runbarfill" style="width:${pct}%"></i></div>
+    <div class="runctl">
+      <button class="btn subtle" onclick="prevStep()">‹ Back</button>
+      <button class="btn primary" onclick="togglePause()">${run.paused ? "Resume" : "Pause"}</button>
+      <button class="btn subtle" onclick="nextStep()">Skip ›</button>
+    </div>
+    <div style="max-width:420px; margin:12px auto 0;">
+      <button class="btn ghost" onclick="endEarly()">End session</button>
+    </div>
+  </div>`;
+}
+function togglePause() { run.paused = !run.paused; render(); }
+function nextStep() {
+  if (run.idx + 1 < run.routine.steps.length) { run.idx++; run.remaining = run.routine.steps[run.idx].s; render(); }
+  else finishRun();
+}
+function prevStep() {
+  if (run.idx > 0) { run.idx--; }
+  run.remaining = run.routine.steps[run.idx].s; render();
+}
+function endEarly() { finishRun(); }
+function finishRun() {
+  clearInterval(run.timer);
+  releaseWakeLock();
+  chime();
+  const r = run.routine;
+  // count techniques practiced in this routine
+  const ids = [...new Set(r.steps.map(s => s.tech).filter(Boolean))];
+  ids.forEach(id => { db.practiced[id] = (db.practiced[id] || 0) + 1; });
+  save();
+  fdata = { routineId: r.id, routineName: r.name, minutes: r.minutes, pressure: "", rating: 0, notes: "" };
+  run = null;
+  go({ name: "feedback" });
+}
+
+/* ---------- Feedback after a session ---------- */
+
+function feedbackView() {
+  return `
+  <header class="appbar">
+    <h1>How was it?</h1>
+    <p>${esc(fdata.routineName)} — capture your partner's feedback while it's fresh. This is how you get better.</p>
+  </header>
+  <label class="fieldlabel">Pressure, according to your partner</label>
+  <div class="seg">
+    ${["Too light", "Just right", "Too firm"].map(p =>
+      `<button class="${fdata.pressure === p ? "on" : ""}" onclick="stashFeedback();fdata.pressure='${p}';render()">${p}</button>`).join("")}
+  </div>
+  <label class="fieldlabel">Partner's rating</label>
+  <div class="hearts">
+    ${[1, 2, 3, 4, 5].map(n => `<button class="${fdata.rating >= n ? "on" : ""}" onclick="stashFeedback();fdata.rating=${n};render()">♥</button>`).join("")}
+  </div>
+  <label class="fieldlabel">One thing to do more of · one thing to change</label>
+  <textarea id="fb-notes" rows="4" placeholder="e.g. More scalp time. Slow down the kneading. Loved the forearm glides.">${esc(fdata.notes)}</textarea>
+  <div style="margin-top:18px;">
+    <button class="btn east" onclick="saveFeedback()">Save session</button>
+    <button class="btn ghost" onclick="setTab('routines')">Discard</button>
+  </div>`;
+}
+function stashFeedback() {
+  fdata.notes = $("#fb-notes") ? $("#fb-notes").value : fdata.notes;
+}
+function saveFeedback() {
+  stashFeedback();
+  const notes = (fdata.notes || "").trim();
+  db.sessions.unshift({
+    date: new Date().toISOString(), routineId: fdata.routineId, name: fdata.routineName,
+    minutes: fdata.minutes, pressure: fdata.pressure, rating: fdata.rating, notes
+  });
+  save();
+  setTab("log");
+}
+
+/* ---------- Log ---------- */
+
+function logView() {
+  const total = db.sessions.length;
+  const mins = db.sessions.reduce((a, s) => a + (s.minutes || 0), 0);
+  const tried = Object.keys(db.practiced).filter(k => db.practiced[k] > 0).length;
+  const top = Object.entries(db.practiced).filter(([, n]) => n > 0).sort((a, b) => b[1] - a[1]).slice(0, 5);
+  return `
+  <header class="appbar">
+    <h1>Practice log</h1>
+    <p>Your training data: every session, every piece of feedback.</p>
+  </header>
+  <div class="statrow">
+    <div class="stat"><b>${total}</b><span>sessions</span></div>
+    <div class="stat"><b>${mins}</b><span>minutes</span></div>
+    <div class="stat"><b>${tried}<i style="font-style:normal; color:var(--muted); font-size:14px;">/${TECHNIQUES.length}</i></b><span>techniques</span></div>
+  </div>
+  <button class="btn subtle" onclick="openLogForm()">＋ Log a session manually</button>
+  ${top.length ? `<div class="section-title">Most practiced</div><div class="card">${top.map(([id, n]) =>
+    `<div class="kv"><span>${esc(tech(id) ? tech(id).name : id)}</span><b>×${n}</b></div>`).join("")}</div>` : ""}
+  <div class="section-title">Sessions</div>
+  ${total === 0 ? `
+    <div class="empty">
+      <div class="big">🌙</div>
+      <h3>Nothing logged yet</h3>
+      <p>Run a guided routine or log a freestyle session — feedback in, improvement out.</p>
+    </div>` :
+    db.sessions.map((s, i) => `
+    <div class="card logcard">
+      <div style="display:flex; justify-content:space-between; align-items:baseline; gap:8px;">
+        <b style="font-size:15.5px;">${esc(s.name)}</b>
+        <button style="border:none; background:transparent; color:var(--muted); cursor:pointer; font-size:15px;" onclick="delSession(${i})" aria-label="Delete">✕</button>
+      </div>
+      <div class="meta">${new Date(s.date).toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" })} · ${s.minutes} min${s.pressure ? " · " + esc(s.pressure) : ""}${s.rating ? " · " + '<span style="color:var(--east)">' + "♥".repeat(s.rating) + "</span>" : ""}</div>
+      ${s.notes ? `<div class="notes">“${esc(s.notes)}”</div>` : ""}
+    </div>`).join("")}`;
+}
+function delSession(i) {
+  if (!confirm("Delete this session from the log?")) return;
+  db.sessions.splice(i, 1); save(); render();
+}
+function openLogForm() {
+  fdata = { name: "", minutes: 20, pressure: "", rating: 0, notes: "" };
+  go({ name: "logform" });
+}
+function logFormView() {
+  return `
+  <button class="back" onclick="setTab('log')">‹ Log</button>
+  <header class="appbar"><h1>Log a session</h1><p>Freestyled something off-menu? It still counts.</p></header>
+  <label class="fieldlabel">What did you do?</label>
+  <input type="text" id="lf-name" placeholder="e.g. Back + feet freestyle" value="${esc(fdata.name)}" />
+  <label class="fieldlabel">Minutes</label>
+  <input type="number" id="lf-mins" min="1" max="180" value="${fdata.minutes}" />
+  <label class="fieldlabel">Pressure, according to your partner</label>
+  <div class="seg">
+    ${["Too light", "Just right", "Too firm"].map(p =>
+      `<button class="${fdata.pressure === p ? "on" : ""}" onclick="stashLogForm();fdata.pressure='${p}';render()">${p}</button>`).join("")}
+  </div>
+  <label class="fieldlabel">Partner's rating</label>
+  <div class="hearts">
+    ${[1, 2, 3, 4, 5].map(n => `<button class="${fdata.rating >= n ? "on" : ""}" onclick="stashLogForm();fdata.rating=${n};render()">♥</button>`).join("")}
+  </div>
+  <label class="fieldlabel">Notes & feedback</label>
+  <textarea id="lf-notes" rows="4" placeholder="What worked, what to change next time…">${esc(fdata.notes)}</textarea>
+  <div style="margin-top:18px;">
+    <button class="btn east" onclick="saveManualLog()">Save session</button>
+  </div>`;
+}
+function stashLogForm() {
+  fdata.name = $("#lf-name") ? $("#lf-name").value : fdata.name;
+  fdata.minutes = $("#lf-mins") ? parseInt($("#lf-mins").value, 10) || fdata.minutes : fdata.minutes;
+  fdata.notes = $("#lf-notes") ? $("#lf-notes").value : fdata.notes;
+}
+function saveManualLog() {
+  stashLogForm();
+  db.sessions.unshift({
+    date: new Date().toISOString(), routineId: null, name: fdata.name.trim() || "Freestyle session",
+    minutes: Math.max(1, fdata.minutes || 20), pressure: fdata.pressure, rating: fdata.rating, notes: fdata.notes.trim()
+  });
+  save();
+  setTab("log");
+}
+
+/* ---------- Basics ---------- */
+
+function basicsView() {
+  return `
+  <header class="appbar">
+    <h1>Foundations</h1>
+    <p>Read once before your first session, then skim before deep-pressure work.</p>
+  </header>
+  ${BASICS.map(b => `<div class="card">
+    <h2 style="font-size:17px; margin-bottom:6px;">${b.icon}&nbsp; ${esc(b.title)}</h2>
+    <div style="font-size:14.5px;">${b.body}</div>
+  </div>`).join("")}
+  <p style="text-align:center; color:var(--muted); font-size:12.5px; margin-top:18px;">
+    Everything stays on this device. Kneaded is for wellness massage between consenting partners — not a substitute for medical or therapeutic care.
+  </p>`;
+}
+
+/* ============================== BOOT ============================== */
+
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "visible" && run && !run.paused) grabWakeLock();
+});
+render();
+if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
+</script>
+</body>
+</html>
