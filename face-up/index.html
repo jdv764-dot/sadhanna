@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no" />
+<title>Face Up</title>
+<meta name="description" content="A 30-night trainer for stomach sleepers who want to become back sleepers — nightly routine, breathing timer, position log, and a phased program." />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="Face Up" />
+<meta name="theme-color" content="#0f1526" />
+<link rel="manifest" href="manifest.webmanifest" />
+<link rel="apple-touch-icon" href="icon-180.png" />
+<link rel="icon" type="image/png" href="icon-180.png" />
+<style>
+:root{
+  --bg0:#0f1526; --bg1:#161f38; --card:#1c2745; --card2:#223054;
+  --line:#2c3a63; --ink:#e8edfb; --dim:#8e9cc4; --faint:#5d6a94;
+  --moon:#f0c975; --peri:#8ea4ff; --good:#7fd6a4; --mid:#f0c975; --bad:#f08a8a;
+  --r:16px;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{font-size:16px}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  background:linear-gradient(180deg,var(--bg0) 0%,var(--bg1) 100%);
+  color:var(--ink); min-height:100vh; min-height:100dvh;
+  padding-bottom:calc(84px + env(safe-area-inset-bottom));
+  -webkit-font-smoothing:antialiased;
+}
+header{
+  padding:calc(14px + env(safe-area-inset-top)) 20px 10px;
+  display:flex;align-items:baseline;justify-content:space-between;
+}
+header h1{font-size:1.5rem;letter-spacing:.3px}
+header h1 .up{color:var(--moon)}
+header .date{color:var(--dim);font-size:.85rem}
+main{padding:4px 16px 24px;max-width:560px;margin:0 auto}
+.card{
+  background:var(--card);border:1px solid var(--line);border-radius:var(--r);
+  padding:16px;margin-bottom:14px;
+}
+.card h2{font-size:1.02rem;margin-bottom:4px}
+.card .sub{color:var(--dim);font-size:.83rem;line-height:1.45;margin-bottom:10px}
+.tag{display:inline-block;font-size:.68rem;font-weight:700;letter-spacing:.6px;text-transform:uppercase;
+  color:var(--peri);margin-bottom:6px}
+.tag.gold{color:var(--moon)}
+/* checklist */
+.chk{list-style:none}
+.chk li{
+  display:flex;align-items:center;gap:12px;padding:11px 4px;
+  border-bottom:1px solid rgba(44,58,99,.55);cursor:pointer;user-select:none;-webkit-user-select:none;
+}
+.chk li:last-child{border-bottom:none}
+.chk .box{
+  width:26px;height:26px;border-radius:9px;border:2px solid var(--faint);
+  flex:none;display:flex;align-items:center;justify-content:center;
+  font-size:.9rem;color:var(--bg0);transition:all .15s;
+}
+.chk li.on .box{background:var(--good);border-color:var(--good)}
+.chk .t{font-size:.93rem;line-height:1.35}
+.chk li.on .t{color:var(--dim);text-decoration:line-through}
+/* buttons */
+.btn{
+  display:block;width:100%;padding:14px;border:none;border-radius:14px;
+  background:var(--peri);color:#101733;font-size:1rem;font-weight:700;cursor:pointer;
+}
+.btn.gold{background:var(--moon)}
+.btn.ghost{background:var(--card2);color:var(--ink);border:1px solid var(--line)}
+.btn:disabled{opacity:.45}
+/* segmented */
+.seg{display:flex;gap:8px;margin:8px 0 14px}
+.seg button{
+  flex:1;padding:11px 4px;border-radius:12px;border:1px solid var(--line);
+  background:var(--card2);color:var(--dim);font-size:.86rem;font-weight:600;cursor:pointer;
+}
+.seg button.sel{background:var(--peri);border-color:var(--peri);color:#101733}
+.seg button.sel.back{background:var(--good);border-color:var(--good)}
+.seg button.sel.stomach{background:var(--bad);border-color:var(--bad)}
+.seg button.sel.side{background:var(--moon);border-color:var(--moon)}
+.lbl{font-size:.8rem;color:var(--dim);font-weight:600;margin-top:6px}
+.stars{display:flex;gap:10px;margin:8px 0 14px}
+.stars button{background:none;border:none;font-size:1.7rem;color:var(--faint);cursor:pointer;padding:2px}
+.stars button.on{color:var(--moon)}
+.saved{color:var(--good);font-size:.85rem;text-align:center;margin-top:10px;font-weight:600}
+/* stats */
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
+.tile{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px}
+.tile .n{font-size:1.7rem;font-weight:800;color:var(--moon)}
+.tile .n.peri{color:var(--peri)}
+.tile .d{font-size:.75rem;color:var(--dim);margin-top:2px;line-height:1.3}
+.strip{display:flex;gap:5px;align-items:flex-end;height:56px;margin:10px 0 4px}
+.strip .bar{flex:1;border-radius:5px 5px 2px 2px;min-width:6px}
+.striplbl{display:flex;justify-content:space-between;color:var(--faint);font-size:.7rem}
+.legend{display:flex;gap:14px;margin-top:10px;font-size:.75rem;color:var(--dim)}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px}
+/* history */
+.hist{list-style:none}
+.hist li{display:flex;align-items:center;gap:10px;padding:10px 2px;border-bottom:1px solid rgba(44,58,99,.55);font-size:.88rem}
+.hist li:last-child{border-bottom:none}
+.hist .dot{width:12px;height:12px;border-radius:50%;flex:none}
+.hist .hd{color:var(--dim);width:86px;flex:none}
+.hist .del{margin-left:auto;background:none;border:none;color:var(--faint);font-size:1rem;cursor:pointer;padding:4px 8px}
+/* program */
+.phase{border-left:4px solid var(--line);padding-left:14px;margin-bottom:8px}
+.phase.now{border-left-color:var(--moon)}
+.phase.done{border-left-color:var(--good)}
+.phase h3{font-size:.98rem;display:flex;align-items:center;gap:8px}
+.phase .badge{font-size:.65rem;font-weight:800;letter-spacing:.5px;padding:3px 8px;border-radius:99px;text-transform:uppercase}
+.phase.now .badge{background:var(--moon);color:#101733}
+.phase.done .badge{background:var(--good);color:#101733}
+.phase.later .badge{background:var(--card2);color:var(--dim)}
+.phase .nights{color:var(--faint);font-size:.75rem;margin:2px 0 6px}
+.phase ul{margin:6px 0 14px 18px;color:var(--dim);font-size:.86rem;line-height:1.55}
+.pbarwrap{background:var(--card2);border-radius:99px;height:10px;overflow:hidden;margin:10px 0 6px}
+.pbar{height:100%;background:linear-gradient(90deg,var(--peri),var(--moon));border-radius:99px;transition:width .4s}
+/* learn */
+.learn .card{cursor:pointer}
+.learn .body{display:none;color:var(--dim);font-size:.88rem;line-height:1.6;margin-top:8px}
+.learn .card.open .body{display:block}
+.learn .more{color:var(--faint);font-size:.75rem;margin-top:6px}
+.warn{border-color:#6b4a3a;background:#2b2033}
+.warn .tag{color:var(--bad)}
+/* tabs */
+nav{
+  position:fixed;bottom:0;left:0;right:0;display:flex;
+  background:rgba(15,21,38,.92);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  border-top:1px solid var(--line);padding:8px 6px calc(8px + env(safe-area-inset-bottom));
+}
+nav button{
+  flex:1;background:none;border:none;color:var(--faint);font-size:.68rem;font-weight:600;
+  display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;padding:4px 0;
+}
+nav button .ic{font-size:1.35rem;line-height:1}
+nav button.sel{color:var(--moon)}
+.view{display:none}
+.view.sel{display:block}
+/* breathing overlay */
+#breathe{
+  position:fixed;inset:0;background:rgba(10,14,26,.97);z-index:50;display:none;
+  flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px;
+}
+#breathe.on{display:flex}
+#bCircle{
+  width:150px;height:150px;border-radius:50%;
+  background:radial-gradient(circle at 35% 30%,#b8c6ff,#5f76d8);
+  box-shadow:0 0 60px rgba(142,164,255,.35);
+  transition:transform linear;transform:scale(.62);
+}
+#bPhase{font-size:1.5rem;font-weight:700;margin-top:38px;min-height:2rem}
+#bCount{font-size:3rem;font-weight:800;color:var(--moon);min-height:3.6rem}
+#bRound{color:var(--dim);margin-top:6px;font-size:.85rem}
+#bStop{margin-top:34px;width:auto;padding:12px 38px}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Face <span class="up">Up</span> 🌙</h1>
+  <span class="date" id="hDate"></span>
+</header>
+
+<main>
+
+<!-- ==================== TONIGHT ==================== -->
+<section class="view sel" id="v-tonight">
+
+  <div class="card">
+    <span class="tag gold">Wind-down · set the stage</span>
+    <h2>Tonight's setup</h2>
+    <p class="sub">Do these before lights out. The right rig makes your back feel like the easy option instead of the enemy.</p>
+    <ul class="chk" id="setupList"></ul>
+  </div>
+
+  <div class="card">
+    <span class="tag">Relax into position</span>
+    <h2>4-7-8 breathing</h2>
+    <p class="sub">Lie on your back, pillow under your knees, then run 4 rounds: inhale 4s · hold 7s · exhale 8s. It drops your heart rate so your back starts to feel like the sleep position.</p>
+    <button class="btn" id="startBreathe">Start breathing — lying on your back</button>
+  </div>
+
+  <div class="card">
+    <span class="tag">Morning check-in</span>
+    <h2>How did last night go?</h2>
+    <p class="sub">Log it when you wake up. Honest data beats a perfect streak — a stomach night is information, not failure.</p>
+
+    <div class="lbl">I fell asleep on my…</div>
+    <div class="seg" id="segAsleep"></div>
+
+    <div class="lbl">I woke up on my…</div>
+    <div class="seg" id="segWoke"></div>
+
+    <div class="lbl">Did you start the night on your back?</div>
+    <div class="seg" id="segStart"></div>
+
+    <div class="lbl">Comfort (1–5)</div>
+    <div class="stars" id="stars"></div>
+
+    <button class="btn gold" id="saveLog">Save last night</button>
+    <div class="saved" id="savedMsg" style="display:none">Saved ✓</div>
+  </div>
+
+</section>
+
+<!-- ==================== PROGRAM ==================== -->
+<section class="view" id="v-program">
+  <div class="card">
+    <span class="tag gold">30-night program</span>
+    <h2 id="progTitle">Night 1 of 30</h2>
+    <div class="pbarwrap"><div class="pbar" id="pbar" style="width:0%"></div></div>
+    <p class="sub" id="progSub">Your program night advances every time you log a morning check-in.</p>
+  </div>
+  <div class="card" id="phases"></div>
+</section>
+
+<!-- ==================== PROGRESS ==================== -->
+<section class="view" id="v-progress">
+  <div class="tiles">
+    <div class="tile"><div class="n" id="stNights">0</div><div class="d">nights logged</div></div>
+    <div class="tile"><div class="n peri" id="stBackPct">–</div><div class="d">woke face-up<br>(last 14 nights)</div></div>
+    <div class="tile"><div class="n" id="stStreak">0</div><div class="d">current face-up<br>wake streak</div></div>
+    <div class="tile"><div class="n peri" id="stStomach">–</div><div class="d">stomach nights<br>(last 14)</div></div>
+  </div>
+
+  <div class="card">
+    <h2>Last 14 nights</h2>
+    <p class="sub">Each bar is the position you woke up in. You're aiming for a green skyline.</p>
+    <div class="strip" id="strip"></div>
+    <div class="striplbl"><span>14 nights ago</span><span>last night</span></div>
+    <div class="legend">
+      <span><i style="background:var(--good)"></i>Back</span>
+      <span><i style="background:var(--mid)"></i>Side</span>
+      <span><i style="background:var(--bad)"></i>Stomach</span>
+      <span><i style="background:var(--card2)"></i>No log</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>History</h2>
+    <ul class="hist" id="hist"></ul>
+    <p class="sub" id="histEmpty" style="margin:6px 0 0">No nights logged yet. Your first check-in is tomorrow morning.</p>
+  </div>
+</section>
+
+<!-- ==================== LEARN ==================== -->
+<section class="view learn" id="v-learn">
+  <div id="learnCards"></div>
+</section>
+
+</main>
+
+<nav>
+  <button data-v="tonight" class="sel"><span class="ic">🌙</span>Tonight</button>
+  <button data-v="program"><span class="ic">🗺️</span>Program</button>
+  <button data-v="progress"><span class="ic">📈</span>Progress</button>
+  <button data-v="learn"><span class="ic">💡</span>Learn</button>
+</nav>
+
+<div id="breathe">
+  <div id="bCircle"></div>
+  <div id="bPhase">Get comfortable…</div>
+  <div id="bCount"></div>
+  <div id="bRound"></div>
+  <button class="btn ghost" id="bStop">Stop</button>
+</div>
+
+<script>
+"use strict";
+/* ---------- storage ---------- */
+const KEY = "faceup-v1";
+let S = { logs:{}, setup:{} };
+try { S = Object.assign(S, JSON.parse(localStorage.getItem(KEY)) || {}); } catch(e){}
+const save = () => localStorage.setItem(KEY, JSON.stringify(S));
+
+const todayKey = () => { const d = new Date(); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); };
+const keyOffset = n => { const d = new Date(); d.setDate(d.getDate()+n); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); };
+const fmtKey = k => { const [y,m,d] = k.split("-").map(Number); return new Date(y,m-1,d).toLocaleDateString(undefined,{month:"short",day:"numeric"}); };
+
+document.getElementById("hDate").textContent = new Date().toLocaleDateString(undefined,{weekday:"short",month:"short",day:"numeric"});
+
+/* ---------- tabs ---------- */
+document.querySelectorAll("nav button").forEach(b => b.onclick = () => {
+  document.querySelectorAll("nav button").forEach(x => x.classList.toggle("sel", x===b));
+  document.querySelectorAll(".view").forEach(v => v.classList.toggle("sel", v.id === "v-"+b.dataset.v));
+  window.scrollTo(0,0);
+  if (b.dataset.v==="progress") renderProgress();
+  if (b.dataset.v==="program") renderProgram();
+});
+
+/* ---------- tonight: setup checklist (per-night) ---------- */
+const SETUP = [
+  "Pillow (or rolled towel) under my knees",
+  "Head pillow low & flat — chin level, not pushed up",
+  "A pillow wedged against each side of me",
+  "Blanket tucked a little snug across my chest",
+  "Phone parked out of reach"
+];
+function renderSetup(){
+  const t = todayKey();
+  if (!S.setup[t]) { S.setup = {}; S.setup[t] = SETUP.map(()=>false); } // keep only tonight
+  const ul = document.getElementById("setupList");
+  ul.innerHTML = "";
+  SETUP.forEach((txt,i) => {
+    const li = document.createElement("li");
+    li.className = S.setup[t][i] ? "on" : "";
+    li.innerHTML = `<span class="box">${S.setup[t][i] ? "✓" : ""}</span><span class="t">${txt}</span>`;
+    li.onclick = () => { S.setup[t][i] = !S.setup[t][i]; save(); renderSetup(); };
+    ul.appendChild(li);
+  });
+}
+renderSetup();
+
+/* ---------- tonight: morning check-in ---------- */
+const POS = [["back","Back 🎯"],["side","Side"],["stomach","Stomach"]];
+let ci = { asleep:null, woke:null, started:null, comfort:0 };
+
+function seg(id, opts, get, set){
+  const el = document.getElementById(id);
+  el.innerHTML = "";
+  opts.forEach(([val,label]) => {
+    const b = document.createElement("button");
+    b.textContent = label;
+    b.className = (get()===val ? "sel "+val : "");
+    b.onclick = () => { set(val); renderCheckin(); };
+    el.appendChild(b);
+  });
+}
+function renderCheckin(){
+  seg("segAsleep", POS, ()=>ci.asleep, v=>ci.asleep=v);
+  seg("segWoke",   POS, ()=>ci.woke,   v=>ci.woke=v);
+  seg("segStart",  [["yes","Yes ✓"],["no","No"]], ()=>ci.started, v=>ci.started=v);
+  const st = document.getElementById("stars");
+  st.innerHTML = "";
+  for (let i=1;i<=5;i++){
+    const b = document.createElement("button");
+    b.textContent = "★";
+    b.className = i<=ci.comfort ? "on" : "";
+    b.onclick = () => { ci.comfort=i; renderCheckin(); };
+    st.appendChild(b);
+  }
+  document.getElementById("saveLog").disabled = !(ci.asleep && ci.woke && ci.started);
+}
+// preload today's log if it exists (editing)
+(function(){ const l = S.logs[todayKey()]; if (l) ci = Object.assign({}, l); })();
+renderCheckin();
+
+document.getElementById("saveLog").onclick = () => {
+  S.logs[todayKey()] = Object.assign({}, ci);
+  save();
+  const m = document.getElementById("savedMsg");
+  m.style.display = "block";
+  m.textContent = ci.woke==="back" ? "Saved ✓ — you woke up face-up. That's the whole game." :
+                  ci.woke==="side" ? "Saved ✓ — side beats stomach. Progress." :
+                  "Saved ✓ — logged. Tonight, wedge those side pillows tighter.";
+  setTimeout(()=>m.style.display="none", 4000);
+  renderProgress(); renderProgram();
+};
+
+/* ---------- breathing ---------- */
+const bEl = document.getElementById("breathe"), bC = document.getElementById("bCircle"),
+      bP = document.getElementById("bPhase"), bN = document.getElementById("bCount"),
+      bR = document.getElementById("bRound");
+let bTimer = null;
+const PHASES = [["Inhale through your nose",4,1],["Hold",7,1],["Exhale slowly through your mouth",8,.62]];
+function startBreathe(){
+  bEl.classList.add("on");
+  let round = 1, pi = 0, left = PHASES[0][1];
+  bC.style.transform = "scale(.62)";
+  const tick = () => {
+    const [name, dur, scale] = PHASES[pi];
+    if (left === PHASES[pi][1]) {
+      bC.style.transitionDuration = dur+"s";
+      bC.style.transform = "scale("+scale+")";
+    }
+    bP.textContent = name;
+    bN.textContent = left;
+    bR.textContent = "Round "+round+" of 4";
+    left--;
+    if (left < 0) {
+      pi++;
+      if (pi >= PHASES.length) { pi = 0; round++; }
+      if (round > 4) { bP.textContent = "Done. Stay right where you are 🌙"; bN.textContent=""; bR.textContent="Eyes closed. You're already in position."; clearInterval(bTimer); bTimer=null; setTimeout(stopBreathe, 6000); return; }
+      left = PHASES[pi][1];
+      if (pi===0) { bC.style.transitionDuration="0.1s"; bC.style.transform="scale(.62)"; }
+      const [,d2,s2] = PHASES[pi];
+      requestAnimationFrame(()=>{ bC.style.transitionDuration = d2+"s"; bC.style.transform = "scale("+s2+")"; });
+    }
+  };
+  tick();
+  bTimer = setInterval(tick, 1000);
+}
+function stopBreathe(){ bEl.classList.remove("on"); if (bTimer) clearInterval(bTimer); bTimer=null; }
+document.getElementById("startBreathe").onclick = startBreathe;
+document.getElementById("bStop").onclick = stopBreathe;
+
+/* ---------- program ---------- */
+const PROGRAM = [
+  { name:"Set the stage", nights:[1,5], goal:"Make face-up physically comfortable before asking yourself to sleep that way.",
+    rules:[
+      "Build the rig every night: pillow under knees, low head pillow, a pillow wedged on each side.",
+      "Once a day, lie on your back for 10 relaxed minutes (reading or breathing counts).",
+      "At lights out, start on your back for the 4-7-8 rounds — then sleep however you sleep.",
+      "Log every morning. No judgment nights."
+    ]},
+  { name:"Start on your back", nights:[6,12], goal:"Fall asleep face-up. What happens after is not your job yet.",
+    rules:[
+      "Every night begins on your back — no exceptions, even after a bad night.",
+      "If you truly can't drop off after ~20 minutes, roll to your SIDE (never stomach) and sleep.",
+      "Keep the side pillows snug; they make the stomach roll annoying.",
+      "Consider the shirt trick (see Learn) if you keep ending up face-down."
+    ]},
+  { name:"Return to base", nights:[13,21], goal:"Teach your sleeping brain that back is home base.",
+    rules:[
+      "Any time you half-wake and notice you've moved: calmly return to your back. Every time.",
+      "Keep starting every night face-up.",
+      "Waking on your side is fine. Waking on your stomach means tighten the barriers tonight.",
+      "Expect a dip around night 15 — it passes. Check the Learn tab."
+    ]},
+  { name:"Lock it in", nights:[22,30], goal:"Back sleeping becomes the default, with less scaffolding.",
+    rules:[
+      "Remove one aid at a time (side pillow first). Keep the knee pillow — many back sleepers keep it forever.",
+      "Still start face-up and still return to base on wakes.",
+      "Two stomach nights in a row? Bring the barriers back for 3 nights, then try again.",
+      "After night 30, keep logging for a week whenever you feel the old habit creeping back."
+    ]}
+];
+const nightsLogged = () => Object.keys(S.logs).length;
+function renderProgram(){
+  const n = Math.min(Math.max(nightsLogged()+1,1), 30);
+  const done = nightsLogged() >= 30;
+  document.getElementById("progTitle").textContent = done ? "Program complete 🎉" : "Night "+n+" of 30";
+  document.getElementById("pbar").style.width = Math.min(nightsLogged()/30*100,100)+"%";
+  document.getElementById("progSub").textContent = done
+    ? "You logged 30 nights. You're a back sleeper now — revisit any phase if the old habit sneaks back."
+    : "Your program night advances every time you log a morning check-in ("+nightsLogged()+" logged so far).";
+  const wrap = document.getElementById("phases");
+  wrap.innerHTML = "";
+  PROGRAM.forEach((ph) => {
+    const status = done || nightsLogged()+1 > ph.nights[1] ? "done" : (n >= ph.nights[0] ? "now" : "later");
+    const div = document.createElement("div");
+    div.className = "phase "+status;
+    div.innerHTML = `<h3>${ph.name} <span class="badge">${status==="now"?"You are here":status==="done"?"Done":"Nights "+ph.nights[0]+"–"+ph.nights[1]}</span></h3>
+      <div class="nights">Nights ${ph.nights[0]}–${ph.nights[1]} · ${ph.goal}</div>
+      <ul>${ph.rules.map(r=>"<li>"+r+"</li>").join("")}</ul>`;
+    wrap.appendChild(div);
+  });
+}
+renderProgram();
+
+/* ---------- progress ---------- */
+const COL = { back:"var(--good)", side:"var(--mid)", stomach:"var(--bad)" };
+function renderProgress(){
+  const keys = Object.keys(S.logs).sort();
+  document.getElementById("stNights").textContent = keys.length;
+
+  const last14 = []; for (let i=13;i>=0;i--) last14.push(keyOffset(-i));
+  const logged14 = last14.filter(k=>S.logs[k]);
+  const back14 = logged14.filter(k=>S.logs[k].woke==="back").length;
+  const stom14 = logged14.filter(k=>S.logs[k].woke==="stomach").length;
+  document.getElementById("stBackPct").textContent = logged14.length ? Math.round(back14/logged14.length*100)+"%" : "–";
+  document.getElementById("stStomach").textContent = logged14.length ? stom14 : "–";
+
+  let streak = 0;
+  for (let i=0;;i++){
+    const l = S.logs[keyOffset(-i)];
+    if (l && l.woke==="back") streak++;
+    else if (i===0 && !l) continue; // today not logged yet doesn't break streak
+    else break;
+  }
+  document.getElementById("stStreak").textContent = streak;
+
+  const strip = document.getElementById("strip");
+  strip.innerHTML = "";
+  last14.forEach(k=>{
+    const l = S.logs[k];
+    const bar = document.createElement("div");
+    bar.className = "bar";
+    if (!l) { bar.style.background="var(--card2)"; bar.style.height="18%"; }
+    else {
+      bar.style.background = COL[l.woke];
+      bar.style.height = l.woke==="back"?"100%":l.woke==="side"?"62%":"34%";
+    }
+    strip.appendChild(bar);
+  });
+
+  const hist = document.getElementById("hist");
+  hist.innerHTML = "";
+  document.getElementById("histEmpty").style.display = keys.length ? "none" : "block";
+  keys.slice().reverse().slice(0,30).forEach(k=>{
+    const l = S.logs[k];
+    const li = document.createElement("li");
+    li.innerHTML = `<span class="dot" style="background:${COL[l.woke]}"></span>
+      <span class="hd">${fmtKey(k)}</span>
+      <span>slept ${l.asleep} → woke ${l.woke}${l.started==="yes"?" · started ✓":""}${l.comfort?" · "+"★".repeat(l.comfort):""}</span>
+      <button class="del" title="Delete">✕</button>`;
+    li.querySelector(".del").onclick = () => {
+      if (confirm("Delete the log for "+fmtKey(k)+"?")) { delete S.logs[k]; save(); renderProgress(); renderProgram(); }
+    };
+    hist.appendChild(li);
+  });
+}
+renderProgress();
+
+/* ---------- learn ---------- */
+const LEARN = [
+  ["Why sleep face-up at all?","Back sleeping keeps your spine in a neutral line, takes the twist out of your neck (stomach sleeping forces your head 90° to one side for hours), avoids compressing your face and chest, and spreads your weight evenly. Stomach sleepers report more neck and lower-back pain than any other group. Face-up is also the position where a supportive setup does the most work for you.","🎯"],
+  ["The rig: pillows are the whole trick","Face-up feels wrong to stomach sleepers mostly because of setup. Three fixes: (1) a pillow under your knees flattens the lower-back arch that makes back-lying ache; (2) a LOW, flat head pillow keeps your chin level — the fat pillow you used face-down will crane your neck; (3) a pillow wedged against each side of your body makes mid-sleep rolling annoying enough that your sleeping brain gives up.","🛏️"],
+  ["The shirt trick (reverse tennis ball)","Classic positional therapy, flipped. Wear a snug t-shirt with a pocket sewn or safety-pinned on the FRONT, and put a tennis ball in it. Rolling onto your stomach becomes instantly uncomfortable and you'll shift back without fully waking. A fanny pack worn on your front, or a knotted towel under your fitted sheet at stomach-zone, works too. Use it in phases 2–3, then wean off.","🎾"],
+  ["Start there, don't stay there","Early on, your only job is to FALL ASLEEP face-up. Sleep position is a habit of the unconscious brain, and it changes from the front end: the position you drop off in gradually becomes the position your body defends. Don't fight midnight rolls in week one — you'll just wreck your sleep and quit.","🌙"],
+  ["Return to base","From phase 3: whenever you surface during the night and notice you've rolled, calmly move back to your back — no frustration, no checking the time. Each return is a rep. Sleep researchers see positional habits shift in roughly 2–3 weeks of consistent reps; the half-asleep corrections count double because they train the unconscious habit directly.","🔁"],
+  ["4-7-8: the transition ritual","In through the nose for 4, hold for 7, out slowly through the mouth for 8, four rounds. The long exhale activates the parasympathetic brake and drops heart rate. Doing it every night while lying face-up pairs relaxation with the position — you're classically conditioning yourself to find your back sleepy.","🫁"],
+  ["Expect the dip","Nights 3–7 usually feel WORSE: you fall asleep slower and wake more. This is normal habit-change friction, not proof it isn't working. It typically resolves by week two, and most people who make it to night 21 report the back feels normal. Two rules for the dip: never respond to a bad night by starting face-down, and never judge the project before night 14.","📉"],
+  ["Track wakes, not perfection","The metric that matters is the position you WAKE UP in — it reflects what your body did on autopilot. Waking face-up more weeks over weeks means it's working, even if you still drift sideways some nights. Side is a perfectly fine runner-up; stomach is the only red bar.","📈"],
+  ["When face-up is the wrong goal","Honest caveat: back sleeping makes snoring and obstructive sleep apnea WORSE, because gravity pulls the tongue backward. If you snore heavily, gasp at night, or wake unrefreshed, talk to a doctor before this program. In late pregnancy, sleeping flat on the back isn't recommended — side-left is. And if reflux bothers you face-up, raise the head of the bed a few inches rather than giving up.","⚠️"]
+];
+(function(){
+  const wrap = document.getElementById("learnCards");
+  LEARN.forEach(([title,body,icon],i)=>{
+    const c = document.createElement("div");
+    c.className = "card"+(title.startsWith("When")?" warn":"");
+    c.innerHTML = `<span class="tag${i%2?"":" gold"}">${icon} Card ${i+1}</span><h2>${title}</h2><div class="body">${body}</div><div class="more">tap to read</div>`;
+    c.onclick = () => { c.classList.toggle("open"); c.querySelector(".more").textContent = c.classList.contains("open") ? "tap to close" : "tap to read"; };
+    wrap.appendChild(c);
+  });
+})();
+
+/* ---------- sw ---------- */
+if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(()=>{});
+</script>
+</body>
+</html>

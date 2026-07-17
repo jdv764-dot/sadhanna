@@ -1,0 +1,14 @@
+{
+  "name": "Face Up — back-sleep trainer",
+  "short_name": "Face Up",
+  "description": "A 30-night trainer for stomach sleepers who want to become back sleepers — nightly routine, breathing timer, position log, and a phased program.",
+  "start_url": ".",
+  "scope": ".",
+  "display": "standalone",
+  "background_color": "#0f1526",
+  "theme_color": "#0f1526",
+  "icons": [
+    { "src": "icon-180.png", "sizes": "180x180", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}
