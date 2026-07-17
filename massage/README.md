@@ -19,6 +19,9 @@ like a native app — no App Store, no Mac, no developer account needed.
     points, Thai palm presses & passive stretches, tuina rolling (gun fa)
     and grasping (na fa), Ayurvedic abhyanga, foot reflexology
     thumb-walking, Indian head massage (champi).
+- **Body map** — a tappable front/back body figure: tap any body part to
+  see which techniques suit it, how to approach the area, and its cautions
+  (including off-limits zones like the front of the neck).
 - **Routines** — six guided, timed sessions (10–25 min) with a full-screen
   step timer, gentle chimes, pause/skip, and a screen wake-lock:
   First Swedish Back, Tension Melter, East Meets West, Thai-Inspired Floor

@@ -1,4 +1,4 @@
-const CACHE = "kneaded-v1";
+const CACHE = "kneaded-v2";
 const ASSETS = ["./", "index.html", "manifest.webmanifest", "icon-180.png", "icon-512.png"];
 
 self.addEventListener("install", e => {
