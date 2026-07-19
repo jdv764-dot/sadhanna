@@ -1,0 +1,1051 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no" />
+<title>Campfire Guitar</title>
+<meta name="description" content="Learn easy guitar songs and tune your guitar — a chromatic tuner, chord library, song book and metronome in one small app." />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="default" />
+<meta name="apple-mobile-web-app-title" content="Guitar" />
+<meta name="theme-color" content="#f7f3ea" />
+<link rel="manifest" href="manifest.webmanifest" />
+<link rel="apple-touch-icon" href="icon-180.png" />
+<link rel="icon" type="image/png" href="icon-180.png" />
+<style>
+  :root {
+    --bg: #f7f3ea;
+    --surface: #ffffff;
+    --surface-2: #f0e9db;
+    --line: #e5ddcc;
+    --ink: #262019;
+    --muted: #8a8071;
+    --amber: #a4632a;
+    --amber-deep: #7c4a1e;
+    --amber-soft: #f3e2cd;
+    --green: #2e7d4f;
+    --green-soft: #ddeee4;
+    --red: #c03b2b;
+    --red-soft: #f4ddd9;
+    --sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
+    --serif: "New York", "Iowan Old Style", Georgia, serif;
+    --mono: ui-monospace, "SF Mono", Menlo, monospace;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    font-family: var(--sans);
+    background: var(--bg);
+    color: var(--ink);
+    min-height: 100vh;
+    padding-bottom: calc(76px + env(safe-area-inset-bottom));
+  }
+  header.app {
+    padding: calc(14px + env(safe-area-inset-top)) 20px 10px;
+    display: flex; align-items: baseline; justify-content: space-between;
+  }
+  header.app h1 { font-family: var(--serif); font-size: 24px; letter-spacing: -0.02em; }
+  header.app .sub { font-size: 12px; color: var(--muted); }
+
+  main { padding: 0 16px; max-width: 640px; margin: 0 auto; }
+  .view { display: none; }
+  .view.active { display: block; animation: fade .18s ease; }
+  @keyframes fade { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; } }
+
+  .card {
+    background: var(--surface); border: 1px solid var(--line);
+    border-radius: 16px; padding: 16px; margin-bottom: 14px;
+  }
+  .card h2 { font-family: var(--serif); font-size: 18px; margin-bottom: 8px; }
+  .hint { font-size: 13px; color: var(--muted); line-height: 1.5; }
+
+  button { font-family: var(--sans); border: none; cursor: pointer; }
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    background: var(--amber); color: #fff; font-size: 15px; font-weight: 600;
+    padding: 12px 20px; border-radius: 12px;
+  }
+  .btn:active { transform: scale(.97); }
+  .btn.ghost { background: var(--surface-2); color: var(--ink); }
+  .btn.stop { background: var(--red); }
+
+  /* ---------- Tuner ---------- */
+  .gauge-wrap { text-align: center; padding: 6px 0 0; }
+  svg.gauge { width: 100%; max-width: 340px; height: auto; }
+  .note-big {
+    font-family: var(--serif); font-size: 64px; font-weight: 700; line-height: 1;
+    letter-spacing: -0.03em; min-height: 64px;
+  }
+  .note-big sub { font-size: 24px; color: var(--muted); }
+  .tune-status { font-size: 15px; font-weight: 600; min-height: 22px; margin-top: 2px; }
+  .tune-status.ok { color: var(--green); }
+  .tune-status.off { color: var(--amber-deep); }
+  .freq-line { font-family: var(--mono); font-size: 13px; color: var(--muted); margin-top: 4px; min-height: 18px; }
+  .strings-row { display: flex; gap: 8px; justify-content: center; margin-top: 14px; flex-wrap: wrap; }
+  .string-btn {
+    width: 48px; height: 58px; border-radius: 12px; background: var(--surface-2);
+    border: 1px solid var(--line); display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 1px; color: var(--ink);
+  }
+  .string-btn b { font-size: 18px; font-family: var(--serif); }
+  .string-btn span { font-size: 10px; color: var(--muted); }
+  .string-btn.near { background: var(--amber-soft); border-color: var(--amber); }
+  .string-btn.playing { background: var(--green-soft); border-color: var(--green); }
+  .tuner-actions { display: flex; justify-content: center; margin-top: 16px; }
+
+  /* ---------- Songs ---------- */
+  .path-note { display: flex; gap: 10px; align-items: flex-start; }
+  .path-note .dot { font-size: 20px; }
+  details.guide { border-top: 1px solid var(--line); margin-top: 12px; padding-top: 10px; }
+  details.guide summary { font-size: 14px; font-weight: 600; color: var(--amber-deep); cursor: pointer; list-style: none; }
+  details.guide summary::before { content: "▸ "; }
+  details.guide[open] summary::before { content: "▾ "; }
+  details.guide ol { margin: 10px 0 4px 20px; font-size: 13px; color: var(--ink); line-height: 1.6; }
+
+  .song-item {
+    width: 100%; text-align: left; background: var(--surface);
+    border: 1px solid var(--line); border-radius: 16px; padding: 14px 16px;
+    margin-bottom: 10px; display: block; color: var(--ink);
+  }
+  .song-item:active { background: var(--surface-2); }
+  .song-item .row1 { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .song-item h3 { font-family: var(--serif); font-size: 17px; }
+  .song-item .done { color: var(--green); font-size: 16px; }
+  .song-item .row2 { display: flex; align-items: center; gap: 6px; margin-top: 7px; flex-wrap: wrap; }
+  .lvl { font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 99px; }
+  .lvl.l1 { background: var(--green-soft); color: var(--green); }
+  .lvl.l2 { background: var(--amber-soft); color: var(--amber-deep); }
+  .lvl.l3 { background: var(--red-soft); color: var(--red); }
+  .chip {
+    font-size: 12px; font-weight: 700; background: var(--surface-2);
+    border: 1px solid var(--line); color: var(--ink);
+    padding: 3px 9px; border-radius: 99px;
+  }
+  button.chip:active { background: var(--amber-soft); }
+
+  /* song detail */
+  .song-top { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .back-btn { background: var(--surface-2); border: 1px solid var(--line); border-radius: 10px;
+    padding: 8px 12px; font-size: 14px; font-weight: 600; color: var(--ink); }
+  .song-meta { display: flex; gap: 6px; flex-wrap: wrap; margin: 10px 0; }
+  .meta-pill { font-size: 12px; background: var(--surface-2); border: 1px solid var(--line);
+    padding: 4px 10px; border-radius: 99px; color: var(--ink); }
+  .strum-box { font-family: var(--mono); font-size: 14px; background: var(--surface-2);
+    border-radius: 10px; padding: 10px 12px; margin-top: 8px; overflow-x: auto; white-space: nowrap; }
+  .sheet { margin-top: 4px; }
+  .sheet h4 { font-size: 12px; text-transform: uppercase; letter-spacing: .08em;
+    color: var(--muted); margin: 16px 0 6px; }
+  .lyr-line { line-height: 1.25; margin-bottom: 10px; font-size: 16px; }
+  .seg { display: inline-block; white-space: pre-wrap; vertical-align: bottom; }
+  .seg i { display: block; font-style: normal; font-weight: 800; font-size: 13px;
+    color: var(--amber-deep); min-height: 17px; font-family: var(--mono); }
+  .song-tools { position: sticky; bottom: calc(80px + env(safe-area-inset-bottom));
+    background: var(--surface); border: 1px solid var(--line); border-radius: 14px;
+    padding: 10px 14px; display: flex; align-items: center; gap: 10px;
+    box-shadow: 0 6px 20px rgba(60,40,10,.10); margin-top: 16px; }
+  .song-tools input[type=range] { flex: 1; accent-color: var(--amber); }
+  .song-tools .btn { padding: 8px 14px; font-size: 13px; }
+  .learn-toggle { width: 100%; margin-top: 12px; background: var(--surface-2); color: var(--ink);
+    border: 1px solid var(--line); border-radius: 12px; padding: 12px; font-size: 15px; font-weight: 600; }
+  .learn-toggle.on { background: var(--green-soft); color: var(--green); border-color: var(--green); }
+
+  /* ---------- Chords ---------- */
+  .chord-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 10px; }
+  .chord-cell { background: var(--surface); border: 1px solid var(--line); border-radius: 14px;
+    padding: 10px 4px 6px; text-align: center; color: var(--ink); }
+  .chord-cell:active { background: var(--amber-soft); }
+  .chord-cell b { display: block; font-family: var(--serif); font-size: 16px; }
+  .chord-cell svg { width: 92px; height: auto; }
+
+  /* modal */
+  .modal-bg { position: fixed; inset: 0; background: rgba(30,22,12,.45); display: none;
+    align-items: center; justify-content: center; z-index: 50; padding: 24px; }
+  .modal-bg.open { display: flex; }
+  .modal { background: var(--surface); border-radius: 20px; padding: 20px; width: 100%;
+    max-width: 320px; text-align: center; animation: fade .15s ease; }
+  .modal h3 { font-family: var(--serif); font-size: 26px; }
+  .modal svg { width: 180px; height: auto; margin: 8px 0; }
+  .modal .hint { margin-bottom: 12px; }
+  .modal .row { display: flex; gap: 10px; justify-content: center; }
+
+  /* ---------- Metronome ---------- */
+  .bpm-big { font-family: var(--serif); font-size: 72px; font-weight: 700; text-align: center;
+    line-height: 1; letter-spacing: -0.03em; }
+  .bpm-label { text-align: center; color: var(--muted); font-size: 13px; margin-bottom: 14px; }
+  .bpm-row { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+  .bpm-row input[type=range] { flex: 1; accent-color: var(--amber); }
+  .round-btn { width: 44px; height: 44px; border-radius: 50%; background: var(--surface-2);
+    border: 1px solid var(--line); font-size: 22px; font-weight: 600; color: var(--ink); flex: none; }
+  .beat-dots { display: flex; gap: 10px; justify-content: center; margin: 6px 0 16px; }
+  .beat-dot { width: 16px; height: 16px; border-radius: 50%; background: var(--surface-2);
+    border: 1px solid var(--line); transition: transform .05s; }
+  .beat-dot.hit { background: var(--amber); border-color: var(--amber); transform: scale(1.35); }
+  .beat-dot.hit.accent { background: var(--red); border-color: var(--red); }
+  .metro-actions { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+  .beats-select { display: flex; gap: 8px; justify-content: center; margin-bottom: 16px; }
+  .beats-select button { padding: 8px 14px; border-radius: 10px; background: var(--surface-2);
+    border: 1px solid var(--line); font-size: 14px; font-weight: 600; color: var(--ink); }
+  .beats-select button.sel { background: var(--amber); border-color: var(--amber); color: #fff; }
+
+  /* ---------- Tab bar ---------- */
+  nav.tabs {
+    position: fixed; bottom: 0; left: 0; right: 0; z-index: 40;
+    background: rgba(255,255,255,.92); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
+    border-top: 1px solid var(--line);
+    display: flex; padding: 8px 8px calc(8px + env(safe-area-inset-bottom));
+  }
+  nav.tabs button {
+    flex: 1; background: none; display: flex; flex-direction: column; align-items: center;
+    gap: 3px; font-size: 10.5px; font-weight: 600; color: var(--muted); padding: 4px 0;
+  }
+  nav.tabs button.active { color: var(--amber-deep); }
+  nav.tabs svg { width: 24px; height: 24px; }
+</style>
+</head>
+<body>
+
+<header class="app">
+  <h1>Campfire Guitar</h1>
+  <span class="sub" id="headerSub">tune · play · repeat</span>
+</header>
+
+<main>
+  <!-- ================= TUNER ================= -->
+  <section class="view active" id="view-tuner">
+    <div class="card gauge-wrap">
+      <svg class="gauge" viewBox="0 0 300 168" aria-hidden="true">
+        <path d="M 30 150 A 120 120 0 0 1 270 150" fill="none" stroke="var(--line)" stroke-width="10" stroke-linecap="round"/>
+        <path d="M 129 31 A 120 120 0 0 1 171 31" fill="none" stroke="var(--green-soft)" stroke-width="10" stroke-linecap="round"/>
+        <g id="ticks" stroke="var(--muted)" stroke-width="1.5"></g>
+        <text x="38" y="164" font-size="11" fill="var(--muted)">-50¢</text>
+        <text x="240" y="164" font-size="11" fill="var(--muted)">+50¢</text>
+        <g id="needle" transform="rotate(0 150 150)">
+          <line x1="150" y1="150" x2="150" y2="44" stroke="var(--amber)" stroke-width="4" stroke-linecap="round"/>
+          <circle cx="150" cy="150" r="8" fill="var(--amber)"/>
+        </g>
+      </svg>
+      <div class="note-big" id="noteName">–</div>
+      <div class="tune-status" id="tuneStatus">Tap start, then play one string</div>
+      <div class="freq-line" id="freqLine"></div>
+
+      <div class="strings-row" id="stringsRow"></div>
+      <p class="hint" style="margin-top:10px">Tap a peg to hear the target note, or use the mic and tune until the needle sits in the green.</p>
+
+      <div class="tuner-actions">
+        <button class="btn" id="micBtn">Start tuner (mic)</button>
+      </div>
+    </div>
+    <div class="card">
+      <h2>How to tune</h2>
+      <p class="hint">
+        Standard tuning, thickest string first: <b>E2 · A2 · D3 · G3 · B3 · E4</b>.
+        Play one string at a time near the mic. If the needle points left the string is <b>too low — tighten</b>;
+        right means <b>too high — loosen</b>. Always tune <i>up</i> to the note: if you overshoot, drop below and come back up — it holds tune better.
+      </p>
+    </div>
+  </section>
+
+  <!-- ================= SONGS ================= -->
+  <section class="view" id="view-songs">
+    <div id="songList"></div>
+    <div id="songDetail" style="display:none"></div>
+  </section>
+
+  <!-- ================= CHORDS ================= -->
+  <section class="view" id="view-chords">
+    <div class="card">
+      <h2>Open chords</h2>
+      <p class="hint">Tap any chord to see it big and hear how it should sound. Numbers are fingers
+      (1 = index … 4 = pinky). <b>○</b> = play open string, <b>✕</b> = don't play that string.</p>
+    </div>
+    <div class="chord-grid" id="chordGrid"></div>
+  </section>
+
+  <!-- ================= METRONOME ================= -->
+  <section class="view" id="view-metro">
+    <div class="card">
+      <div class="bpm-big" id="bpmBig">92</div>
+      <div class="bpm-label">beats per minute</div>
+      <div class="bpm-row">
+        <button class="round-btn" id="bpmMinus">−</button>
+        <input type="range" id="bpmRange" min="40" max="208" value="92" />
+        <button class="round-btn" id="bpmPlus">+</button>
+      </div>
+      <div class="beats-select" id="beatsSelect"></div>
+      <div class="beat-dots" id="beatDots"></div>
+      <div class="metro-actions">
+        <button class="btn" id="metroBtn">Start</button>
+        <button class="btn ghost" id="tapBtn">Tap tempo</button>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Practice with a pulse</h2>
+      <p class="hint">Strumming in time matters more than perfect chords. Start slow — around 60–70 BPM —
+      and only speed up once your chord changes land on the beat. The first beat of each bar is accented.</p>
+    </div>
+  </section>
+</main>
+
+<!-- chord modal -->
+<div class="modal-bg" id="modalBg">
+  <div class="modal">
+    <h3 id="modalName">G</h3>
+    <div id="modalDiagram"></div>
+    <p class="hint" id="modalTip"></p>
+    <div class="row">
+      <button class="btn" id="modalPlay">▶ Hear it</button>
+      <button class="btn ghost" id="modalClose">Close</button>
+    </div>
+  </div>
+</div>
+
+<nav class="tabs">
+  <button data-view="tuner" class="active">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 3v10"/><path d="M8 3v4a4 4 0 0 0 8 0V3"/><circle cx="12" cy="17" r="4"/></svg>
+    Tuner
+  </button>
+  <button data-view="songs">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M9 18V6l10-2v12"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="16.5" cy="16" r="2.5"/></svg>
+    Songs
+  </button>
+  <button data-view="chords">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M5 4v16M10 4v16M15 4v16M20 4v16"/><circle cx="10" cy="9" r="1.6" fill="currentColor"/><circle cx="15" cy="14" r="1.6" fill="currentColor"/></svg>
+    Chords
+  </button>
+  <button data-view="metro">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h6l3 16H6L9 3z"/><path d="M12 15L17 6"/><circle cx="12" cy="15" r="1.4" fill="currentColor"/></svg>
+    Beat
+  </button>
+</nav>
+
+<script>
+"use strict";
+
+/* ======================= shared audio ======================= */
+let actx = null;
+function audio() {
+  if (!actx) actx = new (window.AudioContext || window.webkitAudioContext)();
+  if (actx.state === "suspended") actx.resume();
+  return actx;
+}
+
+/* Karplus–Strong plucked string */
+function pluck(freq, when = 0, gain = 0.5, dur = 2.2) {
+  const ctx = audio();
+  const sr = ctx.sampleRate;
+  const N = Math.max(2, Math.round(sr / freq));
+  const len = Math.floor(sr * dur);
+  const buf = ctx.createBuffer(1, len, sr);
+  const out = buf.getChannelData(0);
+  const ring = new Float32Array(N);
+  for (let i = 0; i < N; i++) ring[i] = Math.random() * 2 - 1;
+  let idx = 0;
+  for (let i = 0; i < len; i++) {
+    const cur = ring[idx];
+    const nxt = ring[(idx + 1) % N];
+    out[i] = cur;
+    ring[idx] = 0.996 * 0.5 * (cur + nxt);
+    idx = (idx + 1) % N;
+  }
+  const src = ctx.createBufferSource();
+  src.buffer = buf;
+  const g = ctx.createGain();
+  g.gain.value = gain;
+  src.connect(g).connect(ctx.destination);
+  src.start(ctx.currentTime + when);
+}
+
+const OPEN_MIDI = [40, 45, 50, 55, 59, 64]; // E2 A2 D3 G3 B3 E4
+const midiFreq = m => 440 * Math.pow(2, (m - 69) / 12);
+
+function strum(chordName) {
+  const c = CHORDS[chordName];
+  if (!c) return;
+  let k = 0;
+  for (let s = 0; s < 6; s++) {
+    const f = c.f[s];
+    if (f < 0) continue;
+    pluck(midiFreq(OPEN_MIDI[s] + f), k * 0.06, 0.32);
+    k++;
+  }
+}
+
+/* ======================= chords ======================= */
+/* f: frets low-E → high-e (-1 muted, 0 open); g: fingers */
+const CHORDS = {
+  "G":     { f: [3,2,0,0,0,3],    g: [2,1,0,0,0,3], tip: "The campfire king. Keep fingers arched so open strings ring." },
+  "C":     { f: [-1,3,2,0,1,0],   g: [0,3,2,0,1,0], tip: "Skip the thick E string. Lean fingers on their tips." },
+  "D":     { f: [-1,-1,0,2,3,2],  g: [0,0,0,1,3,2], tip: "A little triangle on the thin strings. Strum only the top four." },
+  "E":     { f: [0,2,2,1,0,0],    g: [0,2,3,1,0,0], tip: "All six strings ring — one of the fullest sounds on guitar." },
+  "A":     { f: [-1,0,2,2,2,0],   g: [0,0,1,2,3,0], tip: "Three fingers squeezed on one fret. Snuggle them close together." },
+  "Em":    { f: [0,2,2,0,0,0],    g: [0,2,3,0,0,0], tip: "The easiest chord there is — two fingers, all strings." },
+  "Am":    { f: [-1,0,2,2,1,0],   g: [0,0,2,3,1,0], tip: "Same shape as E, moved down one string." },
+  "Dm":    { f: [-1,-1,0,2,3,1],  g: [0,0,0,2,3,1], tip: "The saddest chord. Only the top four strings." },
+  "A7":    { f: [-1,0,2,0,2,0],   g: [0,0,2,0,3,0], tip: "An A with the middle taken out — bluesy and easy." },
+  "B7":    { f: [-1,2,1,2,0,2],   g: [0,2,1,3,0,4], tip: "First real 4-finger chord. Take it slow." },
+  "C7":    { f: [-1,3,2,3,1,0],   g: [0,3,2,4,1,0], tip: "A C with the pinky added on the G string." },
+  "D7":    { f: [-1,-1,0,2,1,2],  g: [0,0,0,2,1,3], tip: "D's jazzier cousin — a triangle pointing the other way." },
+  "E7":    { f: [0,2,0,1,0,0],    g: [0,2,0,1,0,0], tip: "An E with one finger lifted off. Instant blues." },
+  "G7":    { f: [3,2,0,0,0,1],    g: [3,2,0,0,0,1], tip: "A G that leans forward — wants to resolve to C." },
+  "F":     { f: [1,3,3,2,1,1],    g: [1,3,4,2,1,1], barre: { fret: 1, from: 0, to: 5 }, tip: "The famous barre. Index finger flat across all six strings — it takes weeks, not days. That's normal." },
+  "Fmaj7": { f: [-1,-1,3,2,1,0],  g: [0,0,3,2,1,0], tip: "The friendly F — use this until the barre F behaves." },
+  "Asus2": { f: [-1,0,2,2,0,0],   g: [0,0,1,2,0,0], tip: "Airy and open — lovely for slow songs." }
+};
+
+function chordSVG(name, size = 110) {
+  const c = CHORDS[name];
+  if (!c) return "";
+  const W = 110, H = 132;
+  const left = 17, top = 34, sw = (W - 2 * left) / 5, fh = 21, frets = 4;
+  let s = `<svg viewBox="0 0 ${W} ${H}" width="${size}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${name} chord">`;
+  s += `<line x1="${left}" y1="${top}" x2="${W - left}" y2="${top}" stroke="var(--ink)" stroke-width="4" stroke-linecap="round"/>`;
+  for (let i = 1; i <= frets; i++)
+    s += `<line x1="${left}" y1="${top + i * fh}" x2="${W - left}" y2="${top + i * fh}" stroke="var(--line)" stroke-width="1.5"/>`;
+  for (let i = 0; i < 6; i++)
+    s += `<line x1="${left + i * sw}" y1="${top}" x2="${left + i * sw}" y2="${top + frets * fh}" stroke="var(--muted)" stroke-width="1.2"/>`;
+  if (c.barre) {
+    const y = top + (c.barre.fret - 0.5) * fh;
+    s += `<rect x="${left + c.barre.from * sw - 6}" y="${y - 6}" width="${(c.barre.to - c.barre.from) * sw + 12}" height="12" rx="6" fill="var(--amber)"/>`;
+  }
+  for (let i = 0; i < 6; i++) {
+    const x = left + i * sw, f = c.f[i];
+    if (f < 0) {
+      s += `<text x="${x}" y="24" font-size="12" fill="var(--muted)" text-anchor="middle" font-weight="700">✕</text>`;
+    } else if (f === 0) {
+      s += `<circle cx="${x}" cy="20" r="4.5" fill="none" stroke="var(--muted)" stroke-width="1.6"/>`;
+    } else {
+      const y = top + (f - 0.5) * fh;
+      const isBarreIdx = c.barre && f === c.barre.fret;
+      if (!isBarreIdx) s += `<circle cx="${x}" cy="${y}" r="8" fill="var(--amber-deep)"/>`;
+      if (c.g[i]) s += `<text x="${x}" y="${y + 3.6}" font-size="10.5" fill="#fff" text-anchor="middle" font-weight="700">${c.g[i]}</text>`;
+    }
+  }
+  s += `</svg>`;
+  return s;
+}
+
+/* ======================= songs ======================= */
+const SONGS = [
+  {
+    id: "clementine", title: "Oh My Darling, Clementine", by: "Traditional American",
+    level: 1, time: "3/4", bpm: 90, chords: ["G", "D7"],
+    strum: "3/4 waltz:  D  du  du   (bass — down-up — down-up)",
+    tip: "Your first song: only two chords. Stay on G until the words tell you to move — you have a whole bar to get to D7.",
+    sections: [
+      { n: "Verse 1", l: [
+        "In a [G]cavern, in a canyon, excavating [D7]for a [G]mine,",
+        "Dwelt a miner, forty-niner, and his [D7]daughter, Clemen[G]tine."
+      ]},
+      { n: "Chorus", l: [
+        "Oh my [G]darling, oh my darling, oh my [D7]darling Clemen[G]tine,",
+        "You are lost and gone forever, dreadful [D7]sorry, Clemen[G]tine."
+      ]},
+      { n: "Verse 2", l: [
+        "Light she [G]was and like a fairy, and her [D7]shoes were number [G]nine,",
+        "Herring boxes without topses, sandals [D7]were for Clemen[G]tine."
+      ]}
+    ]
+  },
+  {
+    id: "saints", title: "When the Saints Go Marching In", by: "Traditional gospel",
+    level: 1, time: "4/4", bpm: 100, chords: ["G", "C", "D7"],
+    strum: "D  D  DU  DU   (keep it bouncy)",
+    tip: "Three chords and long stretches on each one. Sing it — the melody tells you exactly when the chords change.",
+    sections: [
+      { n: "Verse", l: [
+        "Oh when the [G]saints go marching in,",
+        "Oh when the saints go marching [D7]in,",
+        "Oh when the [G]saints go [C]marching in,",
+        "Oh Lord I [G]want to be in that [D7]number,",
+        "When the [G]saints go [D7]marching [G]in."
+      ]}
+    ]
+  },
+  {
+    id: "birthday", title: "Happy Birthday to You", by: "Hill sisters · public domain",
+    level: 1, time: "3/4", bpm: 110, chords: ["G", "C", "D7"],
+    strum: "3/4:  D  du  du",
+    tip: "Learn this and you'll play it for the rest of your life. The chord change always lands on 'you'.",
+    sections: [
+      { n: "Song", l: [
+        "Happy [G]birthday to [D7]you,",
+        "Happy birthday to [G]you,",
+        "Happy [G]birthday dear [C]friend,",
+        "Happy [G]birthday [D7]to [G]you."
+      ]}
+    ]
+  },
+  {
+    id: "susanna", title: "Oh! Susanna", by: "Stephen Foster, 1848",
+    level: 1, time: "4/4", bpm: 104, chords: ["G", "C", "D7"],
+    strum: "D  DU  D  DU",
+    tip: "The chorus starts on C — that's the only surprise in the whole song.",
+    sections: [
+      { n: "Verse", l: [
+        "I [G]come from Alabama with my banjo on my [D7]knee,",
+        "I'm [G]going to Louisiana, my [D7]true love for to [G]see."
+      ]},
+      { n: "Chorus", l: [
+        "[C]Oh! Susanna, [G]oh don't you cry for [D7]me,",
+        "For I [G]come from Alabama with my [D7]banjo on my [G]knee."
+      ]}
+    ]
+  },
+  {
+    id: "redriver", title: "Red River Valley", by: "Traditional cowboy song",
+    level: 2, time: "4/4", bpm: 88, chords: ["G", "C", "D7"],
+    strum: "D  D  DU  DU   (gentle, let it swing)",
+    tip: "Same three chords, but the changes come mid-line now. Slow it down until they're smooth.",
+    sections: [
+      { n: "Verse", l: [
+        "From this [G]valley they say you are going,",
+        "We will miss your bright eyes and sweet [D7]smile,",
+        "For they [G]say you are taking the [C]sunshine,",
+        "That has [G]brightened our [D7]pathway a [G]while."
+      ]},
+      { n: "Chorus", l: [
+        "Come and [G]sit by my side if you love me,",
+        "Do not hasten to bid me a[D7]dieu,",
+        "But re[G]member the Red River [C]Valley,",
+        "And the [G]cowboy who [D7]loved you so [G]true."
+      ]}
+    ]
+  },
+  {
+    id: "grace", title: "Amazing Grace", by: "John Newton, 1779",
+    level: 2, time: "3/4", bpm: 72, chords: ["G", "C", "D", "Em"],
+    strum: "3/4:  D  du  du   — or pick one string per beat",
+    tip: "Your first minor chord (Em) and your first D. Play it slowly; this song is supposed to breathe.",
+    sections: [
+      { n: "Verse 1", l: [
+        "A[G]mazing grace, how [C]sweet the [G]sound,",
+        "That saved a wretch like [D]me.",
+        "I [G]once was lost, but [C]now am [G]found,",
+        "Was [Em]blind but [D]now I [G]see."
+      ]},
+      { n: "Verse 2", l: [
+        "'Twas [G]grace that taught my [C]heart to [G]fear,",
+        "And grace my fears re[D]lieved.",
+        "How [G]precious did that [C]grace ap[G]pear,",
+        "The [Em]hour I [D]first be[G]lieved."
+      ]}
+    ]
+  },
+  {
+    id: "auldlang", title: "Auld Lang Syne", by: "Robert Burns, 1788",
+    level: 2, time: "4/4", bpm: 80, chords: ["G", "C", "D7", "Em"],
+    strum: "D  DU  D  DU",
+    tip: "Four chords that move quickly at the ends of lines. Great practice for fast G → D7 changes.",
+    sections: [
+      { n: "Verse", l: [
+        "Should [G]auld acquaintance [D7]be forgot, and [G]never brought to [C]mind?",
+        "Should [G]auld acquaintance [D7]be forgot, and [Em]days of [D7]auld lang [G]syne?"
+      ]},
+      { n: "Chorus", l: [
+        "For [G]auld lang [D7]syne, my dear, for [G]auld lang [C]syne,",
+        "We'll [G]take a cup of [D7]kindness yet, for [Em]days of [D7]auld lang [G]syne."
+      ]}
+    ]
+  },
+  {
+    id: "scarborough", title: "Scarborough Fair", by: "Traditional English ballad",
+    level: 3, time: "3/4", bpm: 84, chords: ["Am", "G", "C", "D"],
+    strum: "3/4:  D  du  du   — or arpeggio: low string, then 3-2-1-2-3",
+    tip: "Your first song in a minor key — it starts and ends on Am. Haunting even with simple strums.",
+    sections: [
+      { n: "Verse", l: [
+        "Are you [Am]going to Scarborough [G]Fair? [Am]",
+        "[C]Parsley, [Am]sage, rose[C]mary and [D]thyme, [Am]",
+        "Re[Am]member [C]me to one who [G]lives there,",
+        "For [Am]once she was a [G]true love of [Am]mine."
+      ]}
+    ]
+  },
+  {
+    id: "risingsun", title: "House of the Rising Sun", by: "Traditional American ballad",
+    level: 3, time: "6/8", bpm: 76, chords: ["Am", "C", "D", "F", "E", "E7"],
+    strum: "Arpeggio, 6 notes per chord: bass · 3 · 2 · 3 · 1 · 3  (string numbers)",
+    tip: "The classic fingerpicking rite of passage. Use Fmaj7 if the F barre isn't ready — nobody will mind.",
+    sections: [
+      { n: "Verse 1", l: [
+        "There [Am]is a [C]house in [D]New Or[F]leans,",
+        "They [Am]call the [C]Rising [E]Sun. [E7]",
+        "And it's [Am]been the [C]ruin of [D]many a poor [F]boy,",
+        "And [Am]God, I [E7]know I'm [Am]one."
+      ]},
+      { n: "Verse 2", l: [
+        "My [Am]mother [C]was a [D]tailor, [F]",
+        "She [Am]sewed my [C]new blue [E]jeans, [E7]",
+        "My [Am]father [C]was a [D]gambling [F]man,",
+        "Down [Am]in New [E7]Or[Am]leans."
+      ]}
+    ]
+  },
+  {
+    id: "greensleeves", title: "Greensleeves", by: "Traditional English, 16th c.",
+    level: 3, time: "6/8", bpm: 96, chords: ["Am", "G", "C", "E7"],
+    strum: "6/8 lilt:  D  du  D  du   — two gentle pulses per bar",
+    tip: "A 450-year-old melody. The Am → E7 ending is the move to practice.",
+    sections: [
+      { n: "Verse", l: [
+        "A[Am]las, my love, you [G]do me wrong,",
+        "To [Am]cast me off dis[E7]courteously,",
+        "And [Am]I have loved you [G]oh so long,",
+        "De[Am]lighting [E7]in your [Am]company."
+      ]},
+      { n: "Chorus", l: [
+        "[C]Greensleeves was [G]all my joy,",
+        "[Am]Greensleeves was [E7]my delight,",
+        "[C]Greensleeves was my [G]heart of gold,",
+        "And [Am]who but my [E7]lady Green[Am]sleeves."
+      ]}
+    ]
+  }
+];
+
+const LVL = { 1: ["l1", "Start here"], 2: ["l2", "Next step"], 3: ["l3", "Stretch"] };
+
+/* learned-state */
+const store = {
+  get learned() { try { return new Set(JSON.parse(localStorage.getItem("guitar.learned") || "[]")); } catch (e) { return new Set(); } },
+  toggle(id) {
+    const s = this.learned;
+    s.has(id) ? s.delete(id) : s.add(id);
+    localStorage.setItem("guitar.learned", JSON.stringify([...s]));
+    return s.has(id);
+  }
+};
+
+/* ======================= song rendering ======================= */
+const $ = sel => document.querySelector(sel);
+
+function renderSongList() {
+  const learned = store.learned;
+  const el = $("#songList");
+  let h = `
+    <div class="card">
+      <h2>The song path</h2>
+      <p class="hint">Ten songs, easiest first. Every one is public-domain and playable with the chords in the
+      Chords tab. Learn them in order and each song teaches you exactly one new thing.</p>
+      <details class="guide">
+        <summary>New to guitar? Read this first</summary>
+        <ol>
+          <li><b>Tune up first</b> — everything sounds wrong on an out-of-tune guitar (Tuner tab).</li>
+          <li><b>Learn the chord shapes</b> for the song, one at a time. Press just behind the fret, on your fingertips.</li>
+          <li><b>Practise the changes</b> — switch between the two chords 10 times slowly before you strum anything.</li>
+          <li><b>Strum on the beat</b> and change chords without stopping — a sloppy chord in time beats a perfect chord late.</li>
+          <li><b>Sing along.</b> The words are lined up over the chords: change when the marked syllable arrives.</li>
+        </ol>
+      </details>
+    </div>`;
+  for (const s of SONGS) {
+    const [cls, label] = LVL[s.level];
+    h += `
+    <button class="song-item" data-song="${s.id}">
+      <div class="row1"><h3>${s.title}</h3>${learned.has(s.id) ? '<span class="done">✓ learned</span>' : ""}</div>
+      <div class="row2">
+        <span class="lvl ${cls}">${label}</span>
+        ${s.chords.map(c => `<span class="chip">${c}</span>`).join("")}
+      </div>
+    </button>`;
+  }
+  el.innerHTML = h;
+  el.querySelectorAll("[data-song]").forEach(b =>
+    b.addEventListener("click", () => openSong(b.dataset.song)));
+}
+
+function parseLine(line) {
+  const segs = [];
+  const re = /\[([^\]]+)\]/g;
+  let last = 0, m, pending = null;
+  while ((m = re.exec(line))) {
+    if (m.index > last) segs.push({ ch: pending, tx: line.slice(last, m.index) });
+    else if (pending) segs.push({ ch: pending, tx: "" });
+    pending = m[1];
+    last = re.lastIndex;
+  }
+  segs.push({ ch: pending, tx: line.slice(last) });
+  return segs.filter(s => s.ch || s.tx);
+}
+
+let scrollAnim = null;
+function stopAutoscroll() {
+  if (scrollAnim) { cancelAnimationFrame(scrollAnim); scrollAnim = null; }
+  const b = $("#scrollBtn");
+  if (b) b.textContent = "▶ Auto-scroll";
+}
+
+function openSong(id) {
+  const s = SONGS.find(x => x.id === id);
+  if (!s) return;
+  stopAutoscroll();
+  const learned = store.learned.has(id);
+  const [cls, label] = LVL[s.level];
+  let h = `
+    <div class="song-top">
+      <button class="back-btn" id="songBack">‹ Songs</button>
+    </div>
+    <div class="card">
+      <h2 style="font-size:22px">${s.title}</h2>
+      <p class="hint">${s.by}</p>
+      <div class="song-meta">
+        <span class="lvl ${cls}" style="align-self:center">${label}</span>
+        <span class="meta-pill">${s.time}</span>
+        <span class="meta-pill">♩ ≈ ${s.bpm}</span>
+        ${s.chords.map(c => `<button class="chip" data-chord="${c}">${c}</button>`).join("")}
+      </div>
+      <p class="hint">${s.tip} <i>Tap a chord chip to see and hear it.</i></p>
+      <div class="strum-box">${s.strum}</div>
+      <div class="sheet">`;
+  for (const sec of s.sections) {
+    h += `<h4>${sec.n}</h4>`;
+    for (const line of sec.l) {
+      h += `<div class="lyr-line">` +
+        parseLine(line).map(seg =>
+          `<span class="seg"><i>${seg.ch || "&nbsp;"}</i>${seg.tx}</span>`).join("") +
+        `</div>`;
+    }
+  }
+  h += `</div>
+      <button class="learn-toggle ${learned ? "on" : ""}" id="learnToggle">
+        ${learned ? "✓ Learned — tap to unmark" : "Mark as learned"}</button>
+    </div>
+    <div class="song-tools">
+      <button class="btn" id="scrollBtn">▶ Auto-scroll</button>
+      <input type="range" id="scrollSpeed" min="1" max="10" value="3" aria-label="scroll speed" />
+    </div>`;
+  const d = $("#songDetail");
+  d.innerHTML = h;
+  $("#songList").style.display = "none";
+  d.style.display = "block";
+  window.scrollTo(0, 0);
+
+  $("#songBack").addEventListener("click", closeSong);
+  $("#learnToggle").addEventListener("click", () => {
+    const on = store.toggle(id);
+    const t = $("#learnToggle");
+    t.classList.toggle("on", on);
+    t.textContent = on ? "✓ Learned — tap to unmark" : "Mark as learned";
+  });
+  d.querySelectorAll("[data-chord]").forEach(b =>
+    b.addEventListener("click", () => openChordModal(b.dataset.chord)));
+
+  $("#scrollBtn").addEventListener("click", () => {
+    if (scrollAnim) { stopAutoscroll(); return; }
+    $("#scrollBtn").textContent = "❚❚ Pause";
+    let acc = 0, prev = performance.now();
+    const step = now => {
+      const pxSec = 6 + Number($("#scrollSpeed").value) * 7;
+      acc += (now - prev) / 1000 * pxSec;
+      prev = now;
+      if (acc >= 1) {
+        const px = Math.floor(acc);
+        acc -= px;
+        window.scrollBy(0, px);
+        if (window.innerHeight + window.scrollY >= document.body.scrollHeight - 2) { stopAutoscroll(); return; }
+      }
+      scrollAnim = requestAnimationFrame(step);
+    };
+    scrollAnim = requestAnimationFrame(step);
+  });
+}
+
+function closeSong() {
+  stopAutoscroll();
+  $("#songDetail").style.display = "none";
+  renderSongList();
+  $("#songList").style.display = "block";
+  window.scrollTo(0, 0);
+}
+
+/* ======================= chord tab & modal ======================= */
+function renderChordGrid() {
+  const el = $("#chordGrid");
+  el.innerHTML = Object.keys(CHORDS).map(n =>
+    `<button class="chord-cell" data-chord="${n}"><b>${n}</b>${chordSVG(n, 92)}</button>`).join("");
+  el.querySelectorAll("[data-chord]").forEach(b =>
+    b.addEventListener("click", () => openChordModal(b.dataset.chord)));
+}
+
+function openChordModal(name) {
+  if (!CHORDS[name]) return;
+  $("#modalName").textContent = name;
+  $("#modalDiagram").innerHTML = chordSVG(name, 180);
+  $("#modalTip").textContent = CHORDS[name].tip || "";
+  $("#modalPlay").onclick = () => strum(name);
+  $("#modalBg").classList.add("open");
+}
+$("#modalClose").addEventListener("click", () => $("#modalBg").classList.remove("open"));
+$("#modalBg").addEventListener("click", e => { if (e.target === e.currentTarget) e.currentTarget.classList.remove("open"); });
+
+/* ======================= tuner ======================= */
+const NOTE_NAMES = ["C", "C♯", "D", "D♯", "E", "F", "F♯", "G", "G♯", "A", "A♯", "B"];
+const STRINGS = [
+  { label: "6", note: "E", oct: 2, midi: 40 },
+  { label: "5", note: "A", oct: 2, midi: 45 },
+  { label: "4", note: "D", oct: 3, midi: 50 },
+  { label: "3", note: "G", oct: 3, midi: 55 },
+  { label: "2", note: "B", oct: 3, midi: 59 },
+  { label: "1", note: "e", oct: 4, midi: 64 }
+];
+
+(function buildStrings() {
+  const row = $("#stringsRow");
+  row.innerHTML = STRINGS.map((s, i) =>
+    `<button class="string-btn" data-i="${i}"><b>${s.note}</b><span>${s.label} · ${s.note.toUpperCase()}${s.oct}</span></button>`).join("");
+  row.querySelectorAll("button").forEach(b => b.addEventListener("click", () => {
+    const st = STRINGS[Number(b.dataset.i)];
+    pluck(midiFreq(st.midi), 0, 0.5, 2.6);
+    b.classList.add("playing");
+    setTimeout(() => b.classList.remove("playing"), 700);
+  }));
+  /* gauge ticks */
+  let t = "";
+  for (let c = -50; c <= 50; c += 10) {
+    const a = (c / 50) * 45 * Math.PI / 180;
+    const r1 = 108, r2 = c === 0 ? 96 : 101;
+    const x1 = 150 + Math.sin(a) * r1, y1 = 150 - Math.cos(a) * r1;
+    const x2 = 150 + Math.sin(a) * r2, y2 = 150 - Math.cos(a) * r2;
+    t += `<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}"/>`;
+  }
+  $("#ticks").innerHTML = t;
+})();
+
+let micStream = null, analyser = null, tunerRunning = false, lastDetect = 0, lastGood = 0;
+let smoothCents = 0;
+
+function autoCorrelate(buf, sampleRate) {
+  const SIZE = buf.length;
+  let rms = 0;
+  for (let i = 0; i < SIZE; i++) rms += buf[i] * buf[i];
+  rms = Math.sqrt(rms / SIZE);
+  if (rms < 0.006) return -1;
+
+  let r1 = 0, r2 = SIZE - 1;
+  const thres = 0.2;
+  for (let i = 0; i < SIZE / 2; i++) if (Math.abs(buf[i]) < thres) { r1 = i; break; }
+  for (let i = 1; i < SIZE / 2; i++) if (Math.abs(buf[SIZE - i]) < thres) { r2 = SIZE - i; break; }
+  buf = buf.slice(r1, r2);
+  const N = buf.length;
+  if (N < 128) return -1;
+
+  const c = new Float32Array(N);
+  for (let lag = 0; lag < N; lag++) {
+    let sum = 0;
+    for (let j = 0; j + lag < N; j++) sum += buf[j] * buf[j + lag];
+    c[lag] = sum;
+  }
+  let d = 0;
+  while (d < N - 1 && c[d] > c[d + 1]) d++;
+  let maxval = -1, maxpos = -1;
+  for (let i = d; i < N; i++) if (c[i] > maxval) { maxval = c[i]; maxpos = i; }
+  if (maxpos <= 0) return -1;
+  let T0 = maxpos;
+  const x1 = c[T0 - 1], x2 = c[T0], x3 = T0 + 1 < N ? c[T0 + 1] : x2;
+  const a = (x1 + x3 - 2 * x2) / 2, b = (x3 - x1) / 2;
+  if (a) T0 = T0 - b / (2 * a);
+  const f = sampleRate / T0;
+  return (f > 60 && f < 1200) ? f : -1;
+}
+
+async function startTuner() {
+  try {
+    const ctx = audio();
+    micStream = await navigator.mediaDevices.getUserMedia({
+      audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false }
+    });
+    const src = ctx.createMediaStreamSource(micStream);
+    analyser = ctx.createAnalyser();
+    analyser.fftSize = 2048;
+    src.connect(analyser);
+    tunerRunning = true;
+    $("#micBtn").textContent = "Stop tuner";
+    $("#micBtn").classList.add("stop");
+    $("#tuneStatus").textContent = "Listening… play one string";
+    $("#tuneStatus").className = "tune-status";
+    tunerLoop();
+  } catch (err) {
+    $("#tuneStatus").textContent = "Mic blocked — allow microphone access, or tune by ear with the pegs below";
+    $("#tuneStatus").className = "tune-status off";
+  }
+}
+
+function stopTuner() {
+  tunerRunning = false;
+  if (micStream) { micStream.getTracks().forEach(t => t.stop()); micStream = null; }
+  $("#micBtn").textContent = "Start tuner (mic)";
+  $("#micBtn").classList.remove("stop");
+  $("#noteName").textContent = "–";
+  $("#freqLine").textContent = "";
+  $("#tuneStatus").textContent = "Tap start, then play one string";
+  $("#tuneStatus").className = "tune-status";
+  $("#needle").setAttribute("transform", "rotate(0 150 150)");
+  document.querySelectorAll(".string-btn").forEach(b => b.classList.remove("near"));
+}
+
+const detBuf = new Float32Array(2048);
+function tunerLoop() {
+  if (!tunerRunning) return;
+  requestAnimationFrame(tunerLoop);
+  const now = performance.now();
+  if (now - lastDetect < 60) return;
+  lastDetect = now;
+
+  analyser.getFloatTimeDomainData(detBuf);
+  const f = autoCorrelate(detBuf, actx.sampleRate);
+
+  if (f > 0) {
+    lastGood = now;
+    const midi = 69 + 12 * Math.log2(f / 440);
+    const nearest = Math.round(midi);
+    const cents = (midi - nearest) * 100;
+    smoothCents = smoothCents * 0.6 + cents * 0.4;
+    const name = NOTE_NAMES[((nearest % 12) + 12) % 12];
+    const oct = Math.floor(nearest / 12) - 1;
+    $("#noteName").innerHTML = `${name}<sub>${oct}</sub>`;
+    $("#freqLine").textContent = `${f.toFixed(1)} Hz · ${cents >= 0 ? "+" : ""}${cents.toFixed(0)}¢`;
+    const clamped = Math.max(-50, Math.min(50, smoothCents));
+    $("#needle").setAttribute("transform", `rotate(${(clamped / 50) * 45} 150 150)`);
+
+    /* nearest guitar string */
+    let best = -1, bestAbs = 1e9, bestCents = 0;
+    STRINGS.forEach((s, i) => {
+      const cc = 1200 * Math.log2(f / midiFreq(s.midi));
+      if (Math.abs(cc) < bestAbs) { bestAbs = Math.abs(cc); best = i; bestCents = cc; }
+    });
+    document.querySelectorAll(".string-btn").forEach((b, i) =>
+      b.classList.toggle("near", i === best && bestAbs <= 150));
+    const st = $("#tuneStatus");
+    if (bestAbs <= 150) {
+      const sname = STRINGS[best].note.toUpperCase() + STRINGS[best].oct;
+      if (Math.abs(cents) <= 5 && Math.abs(bestCents) <= 30) {
+        st.textContent = `${sname} — in tune ✓`; st.className = "tune-status ok";
+      } else if (bestCents < 0) {
+        st.textContent = `${sname} string — too low, tighten slowly`; st.className = "tune-status off";
+      } else {
+        st.textContent = `${sname} string — too high, loosen a little`; st.className = "tune-status off";
+      }
+    } else {
+      st.textContent = Math.abs(cents) <= 5 ? "In tune ✓" : (cents < 0 ? "Flat — tune up" : "Sharp — tune down");
+      st.className = Math.abs(cents) <= 5 ? "tune-status ok" : "tune-status off";
+    }
+  } else if (now - lastGood > 900) {
+    $("#noteName").textContent = "–";
+    $("#freqLine").textContent = "";
+    $("#tuneStatus").textContent = "Listening… play one string";
+    $("#tuneStatus").className = "tune-status";
+    $("#needle").setAttribute("transform", "rotate(0 150 150)");
+    document.querySelectorAll(".string-btn").forEach(b => b.classList.remove("near"));
+  }
+}
+
+$("#micBtn").addEventListener("click", () => tunerRunning ? stopTuner() : startTuner());
+
+/* ======================= metronome ======================= */
+const metro = {
+  bpm: Number(localStorage.getItem("guitar.bpm") || 92),
+  beats: 4, running: false, nextTime: 0, beat: 0, timer: null, taps: []
+};
+
+function metroClick(when, accent) {
+  const ctx = audio();
+  const osc = ctx.createOscillator();
+  const g = ctx.createGain();
+  osc.frequency.value = accent ? 1320 : 880;
+  g.gain.setValueAtTime(0.0001, when);
+  g.gain.exponentialRampToValueAtTime(accent ? 0.5 : 0.32, when + 0.002);
+  g.gain.exponentialRampToValueAtTime(0.0001, when + 0.06);
+  osc.connect(g).connect(ctx.destination);
+  osc.start(when); osc.stop(when + 0.08);
+}
+
+function metroScheduler() {
+  const ctx = audio();
+  while (metro.nextTime < ctx.currentTime + 0.12) {
+    const b = metro.beat % metro.beats;
+    metroClick(metro.nextTime, b === 0);
+    const beatIdx = b, at = metro.nextTime;
+    setTimeout(() => flashDot(beatIdx), Math.max(0, (at - ctx.currentTime) * 1000));
+    metro.nextTime += 60 / metro.bpm;
+    metro.beat++;
+  }
+}
+
+function flashDot(i) {
+  document.querySelectorAll(".beat-dot").forEach((d, j) => {
+    d.classList.toggle("hit", j === i);
+    d.classList.toggle("accent", j === i && i === 0);
+  });
+}
+
+function renderBeatDots() {
+  $("#beatDots").innerHTML = Array.from({ length: metro.beats }, () => `<div class="beat-dot"></div>`).join("");
+}
+
+function setBpm(v) {
+  metro.bpm = Math.max(40, Math.min(208, Math.round(v)));
+  $("#bpmBig").textContent = metro.bpm;
+  $("#bpmRange").value = metro.bpm;
+  localStorage.setItem("guitar.bpm", metro.bpm);
+}
+
+function startMetro() {
+  const ctx = audio();
+  metro.running = true; metro.beat = 0; metro.nextTime = ctx.currentTime + 0.08;
+  metro.timer = setInterval(metroScheduler, 25);
+  $("#metroBtn").textContent = "Stop";
+  $("#metroBtn").classList.add("stop");
+}
+function stopMetro() {
+  metro.running = false;
+  clearInterval(metro.timer);
+  $("#metroBtn").textContent = "Start";
+  $("#metroBtn").classList.remove("stop");
+  document.querySelectorAll(".beat-dot").forEach(d => d.classList.remove("hit", "accent"));
+}
+
+$("#metroBtn").addEventListener("click", () => metro.running ? stopMetro() : startMetro());
+$("#bpmRange").addEventListener("input", e => setBpm(e.target.value));
+$("#bpmMinus").addEventListener("click", () => setBpm(metro.bpm - 1));
+$("#bpmPlus").addEventListener("click", () => setBpm(metro.bpm + 1));
+$("#tapBtn").addEventListener("click", () => {
+  const now = performance.now();
+  metro.taps = metro.taps.filter(t => now - t < 2200);
+  metro.taps.push(now);
+  if (metro.taps.length >= 2) {
+    const gaps = [];
+    for (let i = 1; i < metro.taps.length; i++) gaps.push(metro.taps[i] - metro.taps[i - 1]);
+    setBpm(60000 / (gaps.reduce((a, b) => a + b, 0) / gaps.length));
+  }
+});
+(function buildBeatsSelect() {
+  const el = $("#beatsSelect");
+  el.innerHTML = [2, 3, 4, 6].map(n =>
+    `<button data-n="${n}" class="${n === metro.beats ? "sel" : ""}">${n}/4</button>`).join("");
+  el.querySelectorAll("button").forEach(b => b.addEventListener("click", () => {
+    metro.beats = Number(b.dataset.n);
+    el.querySelectorAll("button").forEach(x => x.classList.toggle("sel", x === b));
+    renderBeatDots();
+  }));
+})();
+
+/* ======================= tabs & init ======================= */
+document.querySelectorAll("nav.tabs button").forEach(b => b.addEventListener("click", () => {
+  document.querySelectorAll("nav.tabs button").forEach(x => x.classList.toggle("active", x === b));
+  document.querySelectorAll(".view").forEach(v => v.classList.toggle("active", v.id === "view-" + b.dataset.view));
+  stopAutoscroll();
+  window.scrollTo(0, 0);
+}));
+
+setBpm(metro.bpm);
+renderBeatDots();
+renderSongList();
+renderChordGrid();
+
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));
+}
+</script>
+</body>
+</html>

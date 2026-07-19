@@ -1,0 +1,14 @@
+{
+  "name": "Campfire Guitar — tune & learn songs",
+  "short_name": "Guitar",
+  "description": "Learn easy guitar songs and tune your guitar — a chromatic tuner, chord library, song book and metronome in one small app.",
+  "start_url": ".",
+  "scope": ".",
+  "display": "standalone",
+  "background_color": "#f7f3ea",
+  "theme_color": "#f7f3ea",
+  "icons": [
+    { "src": "icon-180.png", "sizes": "180x180", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}
